@@ -144,10 +144,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="expr.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="y.tab.h" />
+    <ClInclude Include="expr.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
