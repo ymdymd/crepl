@@ -1,4 +1,4 @@
-#include <stdio.h>
+ï»¿#include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -8,8 +8,27 @@
 
 #include <assert.h>
 
+//=============================================================================
+// util
+#ifdef _DEBUG
+#define FUNCTION_CALL_TRACE() std::cout << __FUNCTION__ << std::endl
+#else
+#define FUNCTION_CALL_TRACE() 
+#endif
+
+//-----------------------------------------------------------------------------
+// error
+void Error(const std::string& msg) {
+	std::cerr << msg;
+}
+
+//=============================================================================
+// lexer
+
+//-----------------------------------------------------------------------------
+// token type definition
 enum TokenType {
-	INVALID = 0,
+	EOL = 0,		// End Of Line must be 0.
 	ADD = 1,
 	SUB,
 	MUL,
@@ -34,14 +53,21 @@ enum TokenType {
 	IMM,
 };
 
+//-----------------------------------------------------------------------------
+// token struct
 struct Token {
 	int type;			//token type
 	std::string str;	//token string
+	Token(void) : type(EOL), str("") {};
+	Token(int _type, std::string _str) : type(_type), str(_str) {};
 };
 
-#if 1
 
-void lex(std::string line, std::list<Token>& tokens) {
+//-----------------------------------------------------------------------------
+// Lexer
+// lineã®æ–‡å­—åˆ—ã‚’tokenã«åˆ†å‰²ã™ã‚‹ã€‚
+std::list<Token> lexer(std::string line) {
+	std::list<Token> tokens;
 
 	std::vector<Token> keywords = {
 		{ SFTL,		R"(^\<\<)" },
@@ -91,205 +117,209 @@ void lex(std::string line, std::list<Token>& tokens) {
 		if (token.type) {
 			tokens.push_back(token);
 		}
-		else {	//Œ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍAc‚è‚ğ‚·‚×‚Ätokens‚É“ü‚ê‚é
+		else {	//è¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸå ´åˆã¯ã€æ®‹ã‚Šã‚’ã™ã¹ã¦tokensã«å…¥ã‚Œã‚‹
 			token.str = line;
 			token.type = keywords[i].type;
 			tokens.push_back(token);
 			break;
 		}
 	}
+
+	tokens.push_back(Token(EOL,std::string("")));
+	return tokens;
 }
 
+//=============================================================================
+// AST (Abstract Syntax Tree)
+
+//-----------------------------------------------------------------------------
 // ExprAST - Base class for all expression nodes.
-// ExprAST - ‘S‚Ä‚Ì®ƒm[ƒh‚ÌŠî’êƒNƒ‰ƒXB
+// ExprAST - å…¨ã¦ã®å¼ãƒãƒ¼ãƒ‰ã®åŸºåº•ã‚¯ãƒ©ã‚¹ã€‚
 class ExprAST {
 public:
 	virtual ~ExprAST() {}
+	virtual int eval(void) { return 0; }
 };
-
-// NumberExprAST - Expression class for numeric literals like "1.0".
-// NumberExprAST - "1.0"‚Ì‚æ‚¤‚È”’lƒŠƒeƒ‰ƒ‹‚Ì‚½‚ß‚Ì®ƒNƒ‰ƒXB
-class NumberExprAST : public ExprAST {
+//-----------------------------------------------------------------------------
+// IntegerExprAST - Expression class for integer literals like "1".
+// IntegerExprAST - "1"ã®ã‚ˆã†ãªæ•´æ•°æ•°å€¤ãƒªãƒ†ãƒ©ãƒ«ã®ãŸã‚ã®å¼ã‚¯ãƒ©ã‚¹ã€‚
+class IntegerExprAST : public ExprAST {
 	int Val;
 public:
-	NumberExprAST(int val) : Val(val) {}
+	IntegerExprAST(int val) : Val(val) {}
+	virtual int eval(void) { return Val; }
 };
 
+//-----------------------------------------------------------------------------
 // VariableExprAST - Expression class for referencing a variable, like "a".
-// VariableExprAST - "a"‚Ì‚æ‚¤‚È•Ï”‚ğQÆ‚·‚é‚½‚ß‚Ì®ƒNƒ‰ƒXB
+// VariableExprAST - "a"ã®ã‚ˆã†ãªå¤‰æ•°ã‚’å‚ç…§ã™ã‚‹ãŸã‚ã®å¼ã‚¯ãƒ©ã‚¹ã€‚
 class VariableExprAST : public ExprAST {
 	std::string Name;
-
 public:
 	VariableExprAST(const std::string &Name) : Name(Name) {}
+//	virtual int eval(void) { return Val; }
 };
 
+//-----------------------------------------------------------------------------
 // BinaryExprAST - Expression class for a binary operator.
-// BinaryExprAST - “ñ€‰‰Zq‚Ì‚½‚ß‚Ì®ƒNƒ‰ƒXB
+// BinaryExprAST - äºŒé …æ¼”ç®—å­ã®ãŸã‚ã®å¼ã‚¯ãƒ©ã‚¹ã€‚
 class BinaryExprAST : public ExprAST {
 	int Op;					//opcode
 	std::unique_ptr<ExprAST> LHS, RHS;
-
 public:
 	BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS,
 		std::unique_ptr<ExprAST> RHS)
 		: Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+	virtual int eval(void) {
+		switch (Op) {
+		case(ADD): return LHS->eval() + RHS->eval();
+		case(SUB): return LHS->eval() - RHS->eval();
+		case(MUL): return LHS->eval() * RHS->eval();
+		case(DIV): return LHS->eval() / RHS->eval();
+		}
+		return 0;
+	}
 };
 
-void Error(const std::string& msg) {
-	std::cerr << msg;
-}
+
+//=============================================================================
+// Parser
+
+static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens);
 
 
-static std::unique_ptr<ExprAST> ParsePrimaryExpr(std::list<Token>& tokens);
-
-
-
-/*
-multiplicative_expression
-: primary_expression
-| multiplicative_expression MUL primary_expression
-| multiplicative_expression DIV primary_expression
+/*-----------------------------------------------------------------------------
+integer_expression (terminate)
+: number 
 */
-static std::unique_ptr<ExprAST> MultiplicativeExpression(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
-	auto V = ParsePrimaryExpr(tokens);
-	if (V) return V;
-	
-	auto LHS = MultiplicativeExpression(tokens);
-	if (!LHS) 		return nullptr;
-
-	tokens.pop_front();
-
-	int op = tokens.front().type;
-	if (op == MUL || op == DIV) {
-		tokens.pop_front();	//eat *
-		auto RHS = ParsePrimaryExpr(tokens);
-		if (!RHS) 		return nullptr;
-		tokens.pop_front();	//eat rhs
-							// Merge LHS/RHS.
-		return std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS));
-	}
-	return nullptr;
-}
-
-
-
-/*
-additive_expression
-: multiplicative_expression
-| additive_expression ADD multiplicative_expression
-| additive_expression SUB multiplicative_expression
-*/
-static std::unique_ptr<ExprAST> AdditiveExpression(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
-	auto V = MultiplicativeExpression(tokens);
-	if (V) return V;
-
-	auto LHS = AdditiveExpression(tokens);
-	if (!LHS) 		return nullptr;
-
-	tokens.pop_front();
-
-	int op = tokens.front().type;
-	if (op == ADD || op == SUB) {
-		tokens.pop_front();	//eat *
-		auto RHS = MultiplicativeExpression(tokens);
-		if (!RHS) 		return nullptr;
-		tokens.pop_front();	//eat rhs
-							// Merge LHS/RHS.
-		return std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS));
-	}
-	return nullptr;
-}
-/*
-expression
-: conditional_expression
-*/
-static std::unique_ptr<ExprAST> ParseExpression(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
-	//ƒvƒ‰ƒCƒ}ƒŠ®‚Å‚Í‚¶‚Ü‚è...
-	auto LHS = ParsePrimaryExpr(tokens);
-	if (!LHS)return nullptr;
-
-
-	return AdditiveExpression(tokens);
-}
-
-
-
-// numberexpr ::= number
-// Œ»İ‚Ìƒg[ƒNƒ“‚ªtok_number‚Ìê‡‚É‚±‚ÌŠÖ”‚ªŒÄ‚Ño‚³‚ê‚é–‚ğ‘z’è‚µ‚Ä‚¢‚éB
-// ‚±‚ÌŠÖ”‚ÍŒ»İ‚Ì”’liNumValj‚ğ“Ç‚İæ‚èANumberExprASTƒm[ƒh‚ğ¶¬‚µAš‹å‰ğÍŠí‚ğŸ‚Ìƒg[ƒNƒ“‚Ö‚Æi‚ßA‚»‚µ‚ÄÅŒã‚Éƒm[ƒh‚ğ•Ô‚·B
-static std::unique_ptr<ExprAST> ParseNumberExpr(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
+static std::unique_ptr<ExprAST> integer_expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
 	assert(tokens.front().type == IMM);
 	int value = std::stoi(tokens.front().str);
-	auto Result = std::make_unique<NumberExprAST>(value);
+	auto Result = std::make_unique<IntegerExprAST>(value);
 	tokens.pop_front();											// consume the number
 	return std::move(Result);
 }
 
-// parenexpr ::= '(' expression ')'
-// ‚±‚ÌŠÖ”‚ÍAŒ»İ‚Ìƒg[ƒNƒ“‚ªh(g‚Ìê‡‚ÉŒÄ‚Î‚ê‚é‚±‚Æ‚ğ‘z’è‚µ‚Ä‚¢‚é
-// Ä‹A“I‚ÉParseExpression‚ğŒÄ‚Ño‚µ‚Ä‚¢‚éB
-// ŠÛŠ‡ŒÊ‚»‚Ì‚à‚Ì‚ÍASTƒm[ƒh‚Ì\’z‚ğs‚í‚È‚¢‚±‚Æ‚É’ˆÓ
-static std::unique_ptr<ExprAST> ParseParenExpr(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
-	assert(tokens.front().type == PARL);
-	tokens.pop_front();		// eat (.
-	auto V = ParseExpression(tokens);	// expression
-	if (!V)
-		return nullptr;
 
-	//•›Ÿ®‚ğ‰ğÍ‚µ‚½ŒãAh)h‚ÌoŒ»‚ª‚È‚¢‰Â”\«‚ª‚ ‚éB
-	if (tokens.front().type != PARR) {
-		Error("expected ')'");
-		return nullptr;
+/*-----------------------------------------------------------------------------
+multiplicative_expression
+: primary_expression
+| primary_expression MUL primary_expression
+| primary_expression DIV primary_expression
+*/
+static std::unique_ptr<ExprAST> multiplicative_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = primary_expression(tokens);
+	if (!LHS) return nullptr;
+	int op = tokens.front().type;
+	if (op == MUL || op == DIV) {
+		tokens.pop_front();	//eat op
+		auto RHS = primary_expression(tokens);
+		if (!RHS) 		return nullptr;
+		return multiplicative_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
 	}
-	tokens.pop_front();		// eat ).
-	return V;
+	return LHS;
 }
 
 
+/*-----------------------------------------------------------------------------
+additive_expression
+: multiplicative_expression
+| multiplicative_expression ADD multiplicative_expression
+| multiplicative_expression SUB multiplicative_expression
+*/
+static std::unique_ptr<ExprAST> additive_expression(std::list<Token>& tokens,std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = multiplicative_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
 
-/*
+	int op = tokens.front().type;
+	if (op == ADD || op == SUB) {
+		tokens.pop_front();	//eat op
+		auto RHS = multiplicative_expression(tokens,nullptr);
+		if (!RHS) 		return nullptr;
+		return additive_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+expression
+: additive_expression
+*/
+static std::unique_ptr<ExprAST> expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
+	return additive_expression(tokens, nullptr);
+}
+
+
+/*-----------------------------------------------------------------------------
 primary_expression
-: INT_LITERAL
+: integer_expressionã€€(terminate)
 | PARL expression PARR
 */
-
-// hƒvƒ‰ƒCƒ}ƒŠh®
-static std::unique_ptr<ExprAST> ParsePrimaryExpr(std::list<Token>& tokens) {
-	std::cout << __FUNCTION__ << std::endl;
+static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
 	switch (tokens.front().type) {
 	default:
 		Error("unknown token when expecting an expression");
 		return nullptr;
-//	case tok_identifier:
-//		return ParseIdentifierExpr();
 	case IMM:
-		return ParseNumberExpr(tokens);
-	case PARL:
-		return ParseParenExpr(tokens);
+		return integer_expression(tokens);
+	case PARL: {
+		tokens.pop_front();		// eat (.
+		auto V = expression(tokens);	// expression
+		if (!V)	return nullptr;
+		//å‰¯æ¬¡å¼ã‚’è§£æã—ãŸå¾Œã€â€)â€ã®å‡ºç¾ãŒãªã„å¯èƒ½æ€§ãŒã‚ã‚‹ã€‚
+		if (tokens.front().type != PARR) {
+			Error("expected ')'");
+			return nullptr;
+		}
+		tokens.pop_front();		// eat ).
+		return V;
 	}
+	}
+}
+
+//=============================================================================
+// evalute expr_str
+int eval(const std::string expr_str) {
+	return expression(lexer(expr_str))->eval();
 }
 
 
 
+//=============================================================================
+//test & main
+#include <gtest/gtest.h>
+
+#define TO_STR(...) #__VA_ARGS__
+#define TEST_(expr) ASSERT_EQ( (expr), eval(TO_STR(expr)))
+
+TEST(test, eval)
+{
+	ASSERT_EQ(1+1, eval("1+1"));
+	ASSERT_EQ(1 + 1, eval("1 + 1"));
+	TEST_(1 + 2 * 3);
+	TEST_(1 * 2 + 3);
+	TEST_(1 * (2 + 3));
+	TEST_((1 * 2) + 3);
+	TEST_(1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9);
+	TEST_((1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9);
+	TEST_((1 + 2 * 3) + (4 * 5 + 6) * (7 + 8 * 9));
+	TEST_(((1 + 2 )* 3) + (4 * (5 + 6)) * ((7 + 8) * 9));
+}
 
 
-
-
-int main(void)
+int main(int argc, char** argv)
 {
 	//	std::string line = "1223+123";
 	//std::string line = "1223 + 123 * (3 + 3) && 1+3>>3";
 	//std::string line = " 123+33*44";
-	std::string line = "1+2";
+	std::string line = "1 * 2 + 3";
 
-	std::list<Token> tokens;
-	lex(line, tokens);
+	std::list<Token> tokens = lexer(line);
 
 	std::cout << line << std::endl;
 	for (auto itr = tokens.begin(); itr != tokens.end(); itr++) {
@@ -297,63 +327,10 @@ int main(void)
 		std::cout << itr->str << std::endl;
 	}
 
-//	ParseExpression(tokens);
+	auto expr = expression(tokens);
+	std::cout << expr->eval() << std::endl;
 
-
+	testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }
 
-#else
-void lex(std::string line, std::list<std::string>& tokens) {
-
-	std::vector<std::string> keywords = {
-		R"(^[\+\-\*\%])",
-		R"(^((\<\<)|(>\>)))",
-		R"(^((\&\&)|(\|\|)|(\&)|(\|)|(\^)))",
-		R"(((\<)|(\>)|(\<\=)|(\>\=)|(\=\=)|(\!\=))",
-		R"(^[0-9]+)",
-		R"(^[a-zA-Z_][a-zA-Z_]+)",
-	};
-
-	while (line.length()) {
-		std::smatch m;
-
-		//skip white spcae
-		if (regex_search(line, m , std::regex(R"(^[ \t]+)"))) {
-			line.erase(line.begin(), line.begin() + m[0].length());
-			continue;
-		}
-
-		std::string token;
-		size_t i;
-		for (i = 0; i < keywords.size(); i++) {
-			if (regex_search(line, m, std::regex(keywords[i]))) {
-				token = m[0];
-				line.erase(line.begin(), line.begin() + m[0].length());
-				break;
-			}
-		}
-		if (token.empty()) {	//Œ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍAc‚è‚ğ‚·‚×‚Ätokens‚É“ü‚ê‚é
-			tokens.push_back(line);
-			break;
-		}
-		tokens.push_back(token);
-	}
-}
-
-
-
-int main(void)
-{
-//	std::string line = "1223+123";
-	std::string line = "1223 + 123 * 3 + 3 && 1+3>>3";
-
-	std::list<std::string> tokens;
-	lex(line, tokens);
-
-	std::cout << line << std::endl;
-	for (auto itr = tokens.begin(); itr != tokens.end(); itr++) {
-		std::cout << *itr << std::endl;
-	}
-}
-
-#endif
