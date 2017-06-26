@@ -5,6 +5,7 @@
 #include <list>
 #include <regex>
 #include <memory>
+#include <map>
 
 #include <assert.h>
 
@@ -22,6 +23,8 @@ void Error(const std::string& msg) {
 	std::cerr << msg;
 }
 
+
+
 //=============================================================================
 // lexer
 
@@ -29,10 +32,10 @@ void Error(const std::string& msg) {
 // token type definition
 enum TokenType {
 	EOL = 0,		// End Of Line must be 0.
-	SEMICOLON = 1,
-	COLON,
-	QUESTION,
-	ADD,
+	SEMICOLON = 1,	// :
+	COLON,			// ;
+	QUESTION,		// ?
+	ADD,			// +
 	SUB,
 	MUL,
 	DIV,
@@ -55,6 +58,7 @@ enum TokenType {
 	PARL,
 	PARR,
 	IMM,
+	VAR,
 };
 
 //-----------------------------------------------------------------------------
@@ -100,6 +104,7 @@ std::list<Token> lexer(std::string line) {
 		{ COLON,    R"(^\:)" },
 		{ QUESTION, R"(^\?)" },
 		{ IMM,		R"(^[0-9]+)" },
+		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]+)" },
 	};
 
 	while (line.length()) {
@@ -137,6 +142,7 @@ std::list<Token> lexer(std::string line) {
 	return tokens;
 }
 
+
 //=============================================================================
 // AST (Abstract Syntax Tree)
 
@@ -146,7 +152,7 @@ std::list<Token> lexer(std::string line) {
 class ExprAST {
 public:
 	virtual ~ExprAST() {}
-	virtual int eval(void) { return 0; }
+	virtual int eval( int (*fp)(std::string&) = nullptr) { return 0; }
 };
 //-----------------------------------------------------------------------------
 // IntegerExprAST - Expression class for integer literals like "1".
@@ -155,7 +161,7 @@ class IntegerExprAST : public ExprAST {
 	int Val;
 public:
 	IntegerExprAST(int val) : Val(val) {}
-	virtual int eval(void) { return Val; }
+	virtual int eval(int(*fp)(std::string&) = nullptr) { return Val; }
 };
 
 //-----------------------------------------------------------------------------
@@ -165,7 +171,7 @@ class VariableExprAST : public ExprAST {
 	std::string Name;
 public:
 	VariableExprAST(const std::string &Name) : Name(Name) {}
-//	virtual int eval(void) { return Val; }
+	virtual int eval(int(*fp)(std::string&) = nullptr) { return (fp)?fp(Name):0; }
 };
 
 //-----------------------------------------------------------------------------
@@ -176,12 +182,12 @@ class UnaryExprAST : public ExprAST {
 public:
 	UnaryExprAST(int Op, std::unique_ptr<ExprAST> RHS) 
 		: Op(Op), RHS(std::move(RHS)) {}
-	virtual int eval(void) {
+	virtual int eval(int(*fp)(std::string&) = nullptr) {
 		switch (Op) {
-		case(ADD): return +RHS->eval();
-		case(SUB): return -RHS->eval();
-		case(INV): return ~RHS->eval();
-		case(NOT): return !RHS->eval();
+		case(ADD): return +RHS->eval(fp);
+		case(SUB): return -RHS->eval(fp);
+		case(INV): return ~RHS->eval(fp);
+		case(NOT): return !RHS->eval(fp);
 		}
 		return 0;
 	}
@@ -196,26 +202,26 @@ class BinaryExprAST : public ExprAST {
 public:
 	BinaryExprAST(int Op, std::unique_ptr<ExprAST> LHS,	std::unique_ptr<ExprAST> RHS)
 		: Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
-	virtual int eval(void) {
+	virtual int eval(int(*fp)(std::string&) = nullptr) {
 		switch (Op) {
-		case(ADD): return LHS->eval() + RHS->eval();
-		case(SUB): return LHS->eval() - RHS->eval();
-		case(MUL): return LHS->eval() * RHS->eval();
-		case(DIV): return LHS->eval() / RHS->eval();
-		case(MOD): return LHS->eval() % RHS->eval();
-		case(AND): return LHS->eval() & RHS->eval();
-		case(OR ): return LHS->eval() | RHS->eval();
-		case(XOR): return LHS->eval() ^ RHS->eval();
-		case(LAND):return LHS->eval() && RHS->eval();
-		case(LOR): return LHS->eval() || RHS->eval();
-		case(SFTL):return LHS->eval() << RHS->eval();
-		case(SFTR):return LHS->eval() >> RHS->eval();
-		case(EQ):  return LHS->eval() == RHS->eval();
-		case(NE):  return LHS->eval() != RHS->eval();
-		case(LT):  return LHS->eval() <  RHS->eval();
-		case(LE):  return LHS->eval() <= RHS->eval();
-		case(GT):  return LHS->eval() >  RHS->eval();
-		case(GE):  return LHS->eval() >= RHS->eval();
+		case(ADD): return LHS->eval(fp) + RHS->eval(fp);
+		case(SUB): return LHS->eval(fp) - RHS->eval(fp);
+		case(MUL): return LHS->eval(fp) * RHS->eval(fp);
+		case(DIV): return LHS->eval(fp) / RHS->eval(fp);
+		case(MOD): return LHS->eval(fp) % RHS->eval(fp);
+		case(AND): return LHS->eval(fp) & RHS->eval(fp);
+		case(OR):  return LHS->eval(fp) | RHS->eval(fp);
+		case(XOR): return LHS->eval(fp) ^ RHS->eval(fp);
+		case(LAND):return LHS->eval(fp) && RHS->eval(fp);
+		case(LOR): return LHS->eval(fp) || RHS->eval(fp);
+		case(SFTL):return LHS->eval(fp) << RHS->eval(fp);
+		case(SFTR):return LHS->eval(fp) >> RHS->eval(fp);
+		case(EQ):  return LHS->eval(fp) == RHS->eval(fp);
+		case(NE):  return LHS->eval(fp) != RHS->eval(fp);
+		case(LT):  return LHS->eval(fp) <  RHS->eval(fp);
+		case(LE):  return LHS->eval(fp) <= RHS->eval(fp);
+		case(GT):  return LHS->eval(fp) >  RHS->eval(fp);
+		case(GE):  return LHS->eval(fp) >= RHS->eval(fp);
 		}
 		return 0;
 	}
@@ -229,8 +235,8 @@ public:
 	ConditionalExprAST(std::unique_ptr<ExprAST> COND, 
 		std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
 		: COND(std::move(COND)) , LHS(std::move(LHS)), RHS(std::move(RHS)) {}
-	virtual int eval(void) {
-		return COND->eval() ? LHS->eval() : RHS->eval();
+	virtual int eval(int(*fp)(std::string&) = nullptr) {
+		return COND->eval(fp) ? LHS->eval(fp) : RHS->eval(fp);
 	}
 };
 
@@ -251,6 +257,19 @@ static std::unique_ptr<ExprAST> integer_expression(std::list<Token>& tokens) {
 	int value = std::stoi(tokens.front().str);
 	auto Result = std::make_unique<IntegerExprAST>(value);
 	tokens.pop_front();											// consume the number
+	return std::move(Result);
+}
+
+
+/*-----------------------------------------------------------------------------
+variable_expression (terminate)
+: variable
+*/
+static std::unique_ptr<ExprAST> variable_expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
+	assert(tokens.front().type == VAR);
+	auto Result = std::make_unique<VariableExprAST>(tokens.front().str);
+	tokens.pop_front();											// eat variable
 	return std::move(Result);
 }
 
@@ -511,6 +530,8 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
 		return nullptr;
 	case IMM:
 		return integer_expression(tokens);
+	case VAR:
+		return variable_expression(tokens);
 	case PARL: {
 		tokens.pop_front();		// eat (.
 		auto V = expression(tokens);	// expression
@@ -528,8 +549,8 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
 
 //=============================================================================
 // evalute expr_str
-int eval(const std::string expr_str) {
-	return expression(lexer(expr_str))->eval();
+int eval(const std::string expr_str, int(*fp)(std::string&) = nullptr) {
+	return expression(lexer(expr_str))->eval(fp);
 }
 
 
@@ -541,9 +562,8 @@ int eval(const std::string expr_str) {
 #define TO_STR(...) #__VA_ARGS__
 #define TEST_EVAL(expr) ASSERT_EQ( (int)(expr), (int)eval(TO_STR(expr)))
 
-TEST(test, eval)
+TEST(eval, immidate)
 {
-
 	TEST_EVAL(3 + 2);
 	TEST_EVAL(3 - 2);
 	TEST_EVAL(3 * 2);
@@ -584,8 +604,22 @@ TEST(test, eval)
 }
 
 
+std::map<std::string, int> SymbolMap;
+int getVar(std::string& symbol) {
+	return SymbolMap[symbol];
+}
+
+TEST(eval, variable)
+{
+	std::string symbol = "hoge";
+	SymbolMap[symbol] = 2;
+	ASSERT_EQ((int)SymbolMap[symbol], (int)eval(symbol, getVar));
+}
+
+
 int main(int argc, char** argv)
 {
+#if 0
 	//	std::string line = "1223+123";
 	//std::string line = "1223 + 123 * (3 + 3) && 1+3>>3";
 	//std::string line = " 123+33*44";
@@ -599,10 +633,9 @@ int main(int argc, char** argv)
 //		std::cout << itr->type << ":" << itr->str << std::endl;
 		std::cout << itr->str << std::endl;
 	}
-
 	auto expr = expression(tokens);
 	std::cout << expr->eval() << std::endl;
-
+#endif
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
 }
