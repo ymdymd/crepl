@@ -71,19 +71,27 @@ TEST(eval, variable)
 	ASSERT_EQ((int)Var[symbol], (int)expr::eval(symbol, getVar));
 }
 
-TEST(eval, parser_eval)
+
+int Reg[16];
+int getReg(std::string& symbol) {
+	std::smatch m;
+	int idx;
+	if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
+		idx = std::stoul(m[1], nullptr, 10);
+	}
+
+	return Reg[idx%(sizeof(Reg) * sizeof(Reg[0]))];
+
+}
+TEST(eval, reg)
 {
 
-	auto myAST = expr::parser("r0>=100 && r1<10 || r2!= 5");
+	auto myAST = expr::parser(R"(%r12>=100)");
 
-	Var["r0"] = 128;
-	Var["r1"] = 22;
-	Var["r2"] = 7;
-	ASSERT_EQ((int)(Var["r0"] >= 100 && Var["r1"]<10 || Var["r2"] != 5), myAST->eval(getVar));
-	Var["r0"] = 1;
-	Var["r1"] = 22;
-	Var["r2"] = 5;
-	ASSERT_EQ((int)(Var["r0"] >= 100 && Var["r1"]<10 || Var["r2"] != 5), myAST->eval(getVar));
+	Reg[12] = 128;
+	ASSERT_EQ((int)(Reg[12]>=100), myAST->eval(getReg));
+	Reg[12] = 99;
+	ASSERT_EQ((int)(Reg[12] >= 100), myAST->eval(getReg));
 
 }
 

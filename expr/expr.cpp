@@ -61,6 +61,7 @@ enum TokenType {
 	PARR,
 	IMM,
 	VAR,
+	REG,
 };
 
 
@@ -81,6 +82,9 @@ std::list<Token> lexer(std::string line) {
 	std::list<Token> tokens;
 
 	std::vector<Token> keywords = {
+		{ IMM,		R"(^[0-9]+)" },
+		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]+)" },
+		{ REG,		R"(^\%[a-zA-Z][0-9]+)" },
 		{ SFTL,		R"(^\<\<)" },
 		{ SFTR,		R"(^\>\>)" },
 		{ EQ,		R"(^\=\=)" },
@@ -106,8 +110,6 @@ std::list<Token> lexer(std::string line) {
 		{ SEMICOLON,R"(^\;)" },
 		{ COLON,    R"(^\:)" },
 		{ QUESTION, R"(^\?)" },
-		{ IMM,		R"(^[0-9]+)" },
-		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]+)" },
 	};
 
 	while (line.length()) {
@@ -275,7 +277,7 @@ variable_expression (terminate)
 */
 static std::unique_ptr<ExprAST> variable_expression(std::list<Token>& tokens) {
 	FUNCTION_CALL_TRACE();
-	assert(tokens.front().type == VAR);
+	assert(tokens.front().type == VAR || tokens.front().type == REG);
 	auto Result = std::make_unique<VariableExprAST>(tokens.front().str);
 	tokens.pop_front();											// eat variable
 	return std::move(Result);
@@ -539,6 +541,7 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
 	case IMM:
 		return integer_expression(tokens);
 	case VAR:
+	case REG:
 		return variable_expression(tokens);
 	case PARL: {
 		tokens.pop_front();		// eat (.
