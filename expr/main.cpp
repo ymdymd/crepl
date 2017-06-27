@@ -60,7 +60,7 @@ TEST(eval, immidate)
 
 
 std::map<std::string, int> Var;
-int getVar(std::string& symbol) {
+int getVar(std::string& symbol, void* _this) {
 	return Var[symbol];
 }
 
@@ -73,7 +73,7 @@ TEST(eval, variable)
 
 
 int Reg[16];
-int getReg(std::string& symbol) {
+int getReg(std::string& symbol, void* _this) {
 	std::smatch m;
 	int idx;
 	if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -94,6 +94,45 @@ TEST(eval, reg)
 	ASSERT_EQ((int)(Reg[12] >= 100), myAST->eval(getReg));
 
 }
+
+class Foo {
+public:
+	int reg[16];
+	int getReg(std::string& name) { 
+		std::smatch m;
+		int idx;
+		if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
+			idx = std::stoul(m[1], nullptr, 10);
+		}
+		return reg[idx % (sizeof(reg) * sizeof(reg[0]))];
+	}
+};
+
+static
+int __read_reg(std::string& name, void* _this) {
+	std::smatch m;
+	int idx;
+	if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
+		idx = std::stoul(m[1], nullptr, 10);
+	}
+	return static_cast <Foo*>(_this)->reg[idx % 16];
+}
+
+TEST(eval, this_pointer)
+{
+
+	Foo foo;
+
+	auto myAST = expr::parser(R"(%r12>=100)");
+	foo.reg[12] = 128;
+	ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(__read_reg, &foo));
+	foo.reg[12] = 99;
+	ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(__read_reg, &foo));
+
+}
+
+
+
 
 
 

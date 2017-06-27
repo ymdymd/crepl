@@ -158,7 +158,7 @@ class IntegerExprAST : public ExprAST {
 	int Val;
 public:
 	IntegerExprAST(int val) : Val(val) {}
-	virtual int eval(int(*fp)(std::string&) = nullptr) { return Val; }
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return Val; }
 };
 
 //-----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ class VariableExprAST : public ExprAST {
 	std::string Name;
 public:
 	VariableExprAST(const std::string &Name) : Name(Name) {}
-	virtual int eval(int(*fp)(std::string&) = nullptr) { return (fp) ? fp(Name) : 0; }
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return fp ? fp(Name,_this) : 0; }
 };
 
 //-----------------------------------------------------------------------------
@@ -179,7 +179,15 @@ class UnaryExprAST : public ExprAST {
 public:
 	UnaryExprAST(int Op, std::unique_ptr<ExprAST> RHS)
 		: Op(Op), RHS(std::move(RHS)) {}
-	virtual int eval(int(*fp)(std::string&) = nullptr);
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+		switch (Op) {
+		case(ADD): return +RHS->eval(fp, _this);
+		case(SUB): return -RHS->eval(fp, _this);
+		case(INV): return ~RHS->eval(fp, _this);
+		case(NOT): return !RHS->eval(fp, _this);
+		}
+		return 0;
+	}
 };
 
 //-----------------------------------------------------------------------------
@@ -191,7 +199,29 @@ class BinaryExprAST : public ExprAST {
 public:
 	BinaryExprAST(int Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
 		: Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
-	virtual int eval(int(*fp)(std::string&) = nullptr);
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+		switch (Op) {
+		case(ADD): return LHS->eval(fp, _this) + RHS->eval(fp, _this);
+		case(SUB): return LHS->eval(fp, _this) - RHS->eval(fp, _this);
+		case(MUL): return LHS->eval(fp, _this) * RHS->eval(fp, _this);
+		case(DIV): return LHS->eval(fp, _this) / RHS->eval(fp, _this);
+		case(MOD): return LHS->eval(fp, _this) % RHS->eval(fp, _this);
+		case(AND): return LHS->eval(fp, _this) & RHS->eval(fp, _this);
+		case(OR):  return LHS->eval(fp, _this) | RHS->eval(fp, _this);
+		case(XOR): return LHS->eval(fp, _this) ^ RHS->eval(fp, _this);
+		case(LAND):return LHS->eval(fp, _this) && RHS->eval(fp, _this);
+		case(LOR): return LHS->eval(fp, _this) || RHS->eval(fp, _this);
+		case(SFTL):return LHS->eval(fp, _this) << RHS->eval(fp, _this);
+		case(SFTR):return LHS->eval(fp, _this) >> RHS->eval(fp, _this);
+		case(EQ):  return LHS->eval(fp, _this) == RHS->eval(fp, _this);
+		case(NE):  return LHS->eval(fp, _this) != RHS->eval(fp, _this);
+		case(LT):  return LHS->eval(fp, _this) <  RHS->eval(fp, _this);
+		case(LE):  return LHS->eval(fp, _this) <= RHS->eval(fp, _this);
+		case(GT):  return LHS->eval(fp, _this) >  RHS->eval(fp, _this);
+		case(GE):  return LHS->eval(fp, _this) >= RHS->eval(fp, _this);
+		}
+		return 0;
+	}
 };
 
 //-----------------------------------------------------------------------------
@@ -202,53 +232,12 @@ public:
 	ConditionalExprAST(std::unique_ptr<ExprAST> COND,
 		std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
 		: COND(std::move(COND)), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
-	virtual int eval(int(*fp)(std::string&) = nullptr);
-};
-
-
-//-----------------------------------------------------------------------------
-// UnaryExprAST
-int UnaryExprAST::eval(int(*fp)(std::string&)) {
-	switch (Op) {
-	case(ADD): return +RHS->eval(fp);
-	case(SUB): return -RHS->eval(fp);
-	case(INV): return ~RHS->eval(fp);
-	case(NOT): return !RHS->eval(fp);
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+		return COND->eval(fp, _this) ? LHS->eval(fp, _this) : RHS->eval(fp, _this);
 	}
-	return 0;
-}
-
-//-----------------------------------------------------------------------------
-// BinaryExprAST - Expression class for a binary operator.
-int BinaryExprAST::eval(int(*fp)(std::string&)) {
-	switch (Op) {
-	case(ADD): return LHS->eval(fp) + RHS->eval(fp);
-	case(SUB): return LHS->eval(fp) - RHS->eval(fp);
-	case(MUL): return LHS->eval(fp) * RHS->eval(fp);
-	case(DIV): return LHS->eval(fp) / RHS->eval(fp);
-	case(MOD): return LHS->eval(fp) % RHS->eval(fp);
-	case(AND): return LHS->eval(fp) & RHS->eval(fp);
-	case(OR):  return LHS->eval(fp) | RHS->eval(fp);
-	case(XOR): return LHS->eval(fp) ^ RHS->eval(fp);
-	case(LAND):return LHS->eval(fp) && RHS->eval(fp);
-	case(LOR): return LHS->eval(fp) || RHS->eval(fp);
-	case(SFTL):return LHS->eval(fp) << RHS->eval(fp);
-	case(SFTR):return LHS->eval(fp) >> RHS->eval(fp);
-	case(EQ):  return LHS->eval(fp) == RHS->eval(fp);
-	case(NE):  return LHS->eval(fp) != RHS->eval(fp);
-	case(LT):  return LHS->eval(fp) <  RHS->eval(fp);
-	case(LE):  return LHS->eval(fp) <= RHS->eval(fp);
-	case(GT):  return LHS->eval(fp) >  RHS->eval(fp);
-	case(GE):  return LHS->eval(fp) >= RHS->eval(fp);
-	}
-	return 0;
 };
 
-//-----------------------------------------------------------------------------
-// ConditionalExprAST - Expression class for a conditinal operator.
-int ConditionalExprAST::eval(int(*fp)(std::string&)) {
-	return COND->eval(fp) ? LHS->eval(fp) : RHS->eval(fp);
-};
+
 
 
 //=============================================================================
@@ -567,8 +556,8 @@ std::unique_ptr<ExprAST> parser(const std::string expr_str) {
 
 //=============================================================================
 // evalute expr_str
-int eval(const std::string expr_str, int(*fp)(std::string&)) {
-	return parser(expr_str)->eval(fp);
+int eval(const std::string expr_str, int(*fp)(std::string&, void*), void* _this) {
+	return parser(expr_str)->eval(fp, _this);
 }
 
 

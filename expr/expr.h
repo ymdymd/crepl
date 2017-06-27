@@ -43,7 +43,7 @@ namespace expr {
 class ExprAST {
 public:
 	virtual ~ExprAST() {}
-	virtual int eval(int(*fp)(std::string&) = nullptr) { return 0; }
+	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return 0; }
 };
 
 //-----------------------------------------------------------------------------
@@ -52,6 +52,6 @@ std::unique_ptr<ExprAST> parser(const std::string expr_str);
 
 //-----------------------------------------------------------------------------
 // evalute expr_str
-int eval(const std::string expr_str, int(*fp)(std::string&) = nullptr);
+int eval(const std::string expr_str, int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr);
 
 }	//namespace expr
