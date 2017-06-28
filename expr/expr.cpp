@@ -80,6 +80,8 @@ struct Token {
 // lineの文字列をtokenに分割する。
 std::list<Token> lexer(std::string line) {
 	std::list<Token> tokens;
+	auto itr = line.cbegin();
+	auto ite = line.cend();
 
 	std::vector<Token> keywords = {
 		{ IMM,		R"(^[0-9]+)" },
@@ -112,22 +114,22 @@ std::list<Token> lexer(std::string line) {
 		{ QUESTION, R"(^\?)" },
 	};
 
-	while (line.length()) {
+	while (itr != ite) {
 		std::smatch m;
 
 		//skip white spcae
-		if (regex_search(line, m, std::regex(R"(^[ \t]+)"))) {
-			line.erase(line.begin(), line.begin() + m[0].length());
+		if (regex_search(itr, ite, m, std::regex(R"(^[ \t]+)"))) {
+			itr = m[0].second;
 			continue;
 		}
 
 		Token token;
 		size_t i;
 		for (i = 0; i < keywords.size(); i++) {
-			if (regex_search(line, m, std::regex(keywords[i].str))) {
+			if (regex_search(itr, ite, m, std::regex(keywords[i].str))) {
+				itr = m[0].second;
 				token.str = m[0];
 				token.type = keywords[i].type;
-				line.erase(line.begin(), line.begin() + m[0].length());
 				break;
 			}
 		}
@@ -136,7 +138,7 @@ std::list<Token> lexer(std::string line) {
 			tokens.push_back(token);
 		}
 		else {	//見つからなかった場合は、残りをすべてtokensに入れる
-			token.str = line;
+			token.str = std::string(itr, ite);
 			token.type = keywords[i].type;
 			tokens.push_back(token);
 			break;
