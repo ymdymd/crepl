@@ -30,48 +30,15 @@ static void Error(const std::string& msg) {
 //=============================================================================
 // lexer
 
-//-----------------------------------------------------------------------------
-// token type definition
-enum TokenType {
-	EOL = 0,		// End Of Line must be 0.
-	SEMICOLON = 1,	// :
-	COLON,			// ;
-	QUESTION,		// ?
-	ADD,			// +
-	SUB,
-	MUL,
-	DIV,
-	MOD,
-	AND,
-	OR,
-	XOR,
-	INV,
-	LAND,
-	LOR,
-	NOT,
-	SFTL,
-	SFTR,
-	EQ,
-	NE,
-	LT,
-	LE,
-	GT,
-	GE,
-	PARL,
-	PARR,
-	IMM,
-	VAR,
-	REG,
-};
 
 
 //-----------------------------------------------------------------------------
 // token struct
 struct Token {
-	int type;			//token type
+	Type type;			//token type
 	std::string str;	//token string
 	Token(void) : type(EOL), str("") {};
-	Token(int _type, std::string _str) : type(_type), str(_str) {};
+	Token(Type _type, std::string _str) : type(_type), str(_str) {};
 };
 
 
@@ -159,7 +126,7 @@ std::list<Token> lexer(std::string line) {
 class IntegerExprAST : public ExprAST {
 	int Val;
 public:
-	IntegerExprAST(int val) : Val(val) {}
+	IntegerExprAST(int val) : ExprAST(IMM) , Val(val) {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return Val; }
 };
 
@@ -169,20 +136,19 @@ public:
 class VariableExprAST : public ExprAST {
 	std::string Name;
 public:
-	VariableExprAST(const std::string &Name) : Name(Name) {}
+	VariableExprAST(const std::string &Name) : ExprAST(VAR) , Name(Name) {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return fp ? fp(Name,_this) : 0; }
 };
 
 //-----------------------------------------------------------------------------
 // UnaryExprAST - Expression class for a unary operator.
 class UnaryExprAST : public ExprAST {
-	int Op;					//opcode
 	std::unique_ptr<ExprAST> RHS;
 public:
-	UnaryExprAST(int Op, std::unique_ptr<ExprAST> RHS)
-		: Op(Op), RHS(std::move(RHS)) {}
+	UnaryExprAST(Type type, std::unique_ptr<ExprAST> RHS)
+		: ExprAST(type), RHS(std::move(RHS)) {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
-		switch (Op) {
+		switch (type) {
 		case(ADD): return +RHS->eval(fp, _this);
 		case(SUB): return -RHS->eval(fp, _this);
 		case(INV): return ~RHS->eval(fp, _this);
@@ -196,13 +162,12 @@ public:
 // BinaryExprAST - Expression class for a binary operator.
 // BinaryExprAST - 二項演算子のための式クラス。
 class BinaryExprAST : public ExprAST {
-	int Op;					//opcode
 	std::unique_ptr<ExprAST> LHS, RHS;
 public:
-	BinaryExprAST(int Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
-		: Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+	BinaryExprAST(Type type, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
+		: ExprAST(type), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
-		switch (Op) {
+		switch (type) {
 		case(ADD): return LHS->eval(fp, _this) + RHS->eval(fp, _this);
 		case(SUB): return LHS->eval(fp, _this) - RHS->eval(fp, _this);
 		case(MUL): return LHS->eval(fp, _this) * RHS->eval(fp, _this);
@@ -233,7 +198,7 @@ class ConditionalExprAST : public ExprAST {
 public:
 	ConditionalExprAST(std::unique_ptr<ExprAST> COND,
 		std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
-		: COND(std::move(COND)), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+		: ExprAST(QUESTION) , COND(std::move(COND)), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
 		return COND->eval(fp, _this) ? LHS->eval(fp, _this) : RHS->eval(fp, _this);
 	}
@@ -247,6 +212,286 @@ public:
 
 static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens);
 
+
+
+
+/*-----------------------------------------------------------------------------
+unary_expression
+*/
+static std::unique_ptr<ExprAST> unary_expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
+	Type op = tokens.front().type;
+	if (op == ADD || op == SUB || op == INV || op == NOT) {
+		tokens.pop_front();	//eat op
+		auto RHS = primary_expression(tokens);
+		if (!RHS) return nullptr;
+		return std::make_unique<UnaryExprAST>(op, std::move(RHS));
+	}
+	return primary_expression(tokens);
+}
+
+
+#if 0
+/*-----------------------------------------------------------------------------
+multiplicative_expression
+*/
+static std::unique_ptr<ExprAST> multiplicative_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = unary_expression(tokens);
+	if (!LHS) return nullptr;
+	Type op = tokens.front().type;
+	if (op == MUL || op == DIV || op == MOD) {
+		tokens.pop_front();	//eat op
+		auto RHS = unary_expression(tokens);
+		if (!RHS) 		return nullptr;
+		return multiplicative_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+additive_expression
+*/
+static std::unique_ptr<ExprAST> additive_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = multiplicative_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == ADD || op == SUB) {
+		tokens.pop_front();	//eat op
+		auto RHS = multiplicative_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return additive_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+shift_expression
+*/
+static std::unique_ptr<ExprAST> shift_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = additive_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == SFTL || op == SFTR) {
+		tokens.pop_front();	//eat op
+		auto RHS = additive_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return shift_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+relational_expression
+*/
+static std::unique_ptr<ExprAST> relational_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = shift_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == LT || op == LE || op == GT || op == GE) {
+		tokens.pop_front();	//eat op
+		auto RHS = shift_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return relational_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+equality_expression
+*/
+static std::unique_ptr<ExprAST> equality_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = relational_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == EQ || op == NE) {
+		tokens.pop_front();	//eat op
+		auto RHS = relational_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return equality_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+and_expression
+*/
+static std::unique_ptr<ExprAST> and_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = equality_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == AND) {
+		tokens.pop_front();	//eat op
+		auto RHS = equality_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return and_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+exclusive_or_expression
+*/
+static std::unique_ptr<ExprAST> exclusive_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = and_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == XOR) {
+		tokens.pop_front();	//eat op
+		auto RHS = and_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return exclusive_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+inclusive_or_expression
+*/
+static std::unique_ptr<ExprAST> inclusive_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = exclusive_or_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == XOR) {
+		tokens.pop_front();	//eat op
+		auto RHS = exclusive_or_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return inclusive_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+logical_and_expression
+*/
+static std::unique_ptr<ExprAST> logical_and_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = inclusive_or_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == LAND) {
+		tokens.pop_front();	//eat op
+		auto RHS = inclusive_or_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return logical_and_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+logical_or_expression
+*/
+static std::unique_ptr<ExprAST> logical_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = logical_and_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	Type op = tokens.front().type;
+	if (op == LOR) {
+		tokens.pop_front();	//eat op
+		auto RHS = logical_and_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return logical_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
+	}
+	return LHS;
+}
+
+/*-----------------------------------------------------------------------------
+binary_expression
+*/
+static std::unique_ptr<ExprAST> binary_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	return logical_or_expression(tokens, std::move(LHS));
+}
+#else
+/*-----------------------------------------------------------------------------
+binary_expression
+*/
+static std::unique_ptr<ExprAST> binary_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
+	FUNCTION_CALL_TRACE();
+	if (!LHS) LHS = unary_expression(tokens);
+	if (!LHS) return nullptr;
+	while (1) {
+		Type type = tokens.front().type;
+		// 現在のトークンが、2項演算子でない場合は、LHSを返す。
+		if (type < BINOP_BIGIN || BINOP_END < type) 	return LHS;
+
+		tokens.pop_front();			//eat op
+		auto RHS = unary_expression(tokens);
+		if (!RHS) 		return nullptr;
+
+		//現在の演算優先度が、RHSの後の二項演算の優先度より低い場合は、
+		//現在のRHSを初期ノードとした、二項演算ツリーを作る。
+		if (type < tokens.front().type) {
+			RHS = binary_expression(tokens, std::move(RHS));
+			if (!RHS) 		return nullptr;
+		}
+
+		//merge LHS/RHS
+		LHS = std::make_unique<BinaryExprAST>(type, std::move(LHS), std::move(RHS));
+	}
+}
+#endif
+
+/*-----------------------------------------------------------------------------
+conditional_expression
+*/
+static std::unique_ptr<ExprAST> conditional_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> COND) {
+	FUNCTION_CALL_TRACE();
+	if (!COND) COND = binary_expression(tokens, nullptr);
+	if (!COND) return nullptr;
+	Type op = tokens.front().type;
+	if (op != QUESTION) {
+		return COND;
+	}
+
+	tokens.pop_front();	//eat ?
+	auto LHS = binary_expression(tokens, nullptr);
+	if (!LHS) return nullptr;
+
+	op = tokens.front().type;
+	if (op == QUESTION) {
+		return conditional_expression(tokens, std::move(LHS));
+	}
+
+	if (op == COLON) {
+		tokens.pop_front();	//eat :
+		auto RHS = binary_expression(tokens, nullptr);
+		if (!RHS) 		return nullptr;
+		return conditional_expression(tokens, std::make_unique<ConditionalExprAST>(std::move(COND), std::move(LHS), std::move(RHS)));
+	}
+	else {
+		Error("expected ':'\n");
+		//return nullptr;
+	}
+	return LHS;
+}
+
+
+
+/*-----------------------------------------------------------------------------
+expression
+: equality_expression
+*/
+static std::unique_ptr<ExprAST> expression(std::list<Token>& tokens) {
+	FUNCTION_CALL_TRACE();
+	return conditional_expression(tokens, nullptr);
+}
 
 /*-----------------------------------------------------------------------------
 integer_expression (terminate)
@@ -272,249 +517,6 @@ static std::unique_ptr<ExprAST> variable_expression(std::list<Token>& tokens) {
 	auto Result = std::make_unique<VariableExprAST>(tokens.front().str);
 	tokens.pop_front();											// eat variable
 	return std::move(Result);
-}
-
-
-
-/*-----------------------------------------------------------------------------
-unary_expression
-*/
-static std::unique_ptr<ExprAST> unary_expression(std::list<Token>& tokens) {
-	FUNCTION_CALL_TRACE();
-	int op = tokens.front().type;
-	if (op == ADD || op == SUB || op == INV || op == NOT) {
-		tokens.pop_front();	//eat op
-		auto RHS = primary_expression(tokens);
-		if (!RHS) return nullptr;
-		return std::make_unique<UnaryExprAST>(op, std::move(RHS));
-	}
-	return primary_expression(tokens);
-}
-
-
-/*-----------------------------------------------------------------------------
-multiplicative_expression
-*/
-static std::unique_ptr<ExprAST> multiplicative_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = unary_expression(tokens);
-	if (!LHS) return nullptr;
-	int op = tokens.front().type;
-	if (op == MUL || op == DIV || op == MOD) {
-		tokens.pop_front();	//eat op
-		auto RHS = unary_expression(tokens);
-		if (!RHS) 		return nullptr;
-		return multiplicative_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-additive_expression
-*/
-static std::unique_ptr<ExprAST> additive_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = multiplicative_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == ADD || op == SUB) {
-		tokens.pop_front();	//eat op
-		auto RHS = multiplicative_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return additive_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-shift_expression
-*/
-static std::unique_ptr<ExprAST> shift_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = additive_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == SFTL || op == SFTR) {
-		tokens.pop_front();	//eat op
-		auto RHS = additive_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return shift_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-relational_expression
-*/
-static std::unique_ptr<ExprAST> relational_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = shift_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == LT || op == LE || op == GT || op == GE) {
-		tokens.pop_front();	//eat op
-		auto RHS = shift_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return relational_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-equality_expression
-*/
-static std::unique_ptr<ExprAST> equality_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = relational_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == EQ || op == NE) {
-		tokens.pop_front();	//eat op
-		auto RHS = relational_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return equality_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-and_expression
-*/
-static std::unique_ptr<ExprAST> and_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = equality_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == AND) {
-		tokens.pop_front();	//eat op
-		auto RHS = equality_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return and_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-exclusive_or_expression
-*/
-static std::unique_ptr<ExprAST> exclusive_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = and_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == XOR) {
-		tokens.pop_front();	//eat op
-		auto RHS = and_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return exclusive_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-inclusive_or_expression
-*/
-static std::unique_ptr<ExprAST> inclusive_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = exclusive_or_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == XOR) {
-		tokens.pop_front();	//eat op
-		auto RHS = exclusive_or_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return inclusive_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-logical_and_expression
-*/
-static std::unique_ptr<ExprAST> logical_and_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = inclusive_or_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == LAND) {
-		tokens.pop_front();	//eat op
-		auto RHS = inclusive_or_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return logical_and_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-/*-----------------------------------------------------------------------------
-logical_or_expression
-*/
-static std::unique_ptr<ExprAST> logical_or_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> LHS) {
-	FUNCTION_CALL_TRACE();
-	if (!LHS) LHS = logical_and_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	int op = tokens.front().type;
-	if (op == LOR) {
-		tokens.pop_front();	//eat op
-		auto RHS = logical_and_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return logical_or_expression(tokens, std::make_unique<BinaryExprAST>(op, std::move(LHS), std::move(RHS)));
-	}
-	return LHS;
-}
-
-
-/*-----------------------------------------------------------------------------
-conditional_expression
-*/
-static std::unique_ptr<ExprAST> conditional_expression(std::list<Token>& tokens, std::unique_ptr<ExprAST> COND) {
-	FUNCTION_CALL_TRACE();
-	if (!COND) COND = logical_or_expression(tokens, nullptr);
-	if (!COND) return nullptr;
-	int op = tokens.front().type;
-	if (op != QUESTION) {
-		return COND;
-	}
-
-	tokens.pop_front();	//eat ?
-	auto LHS = logical_or_expression(tokens, nullptr);
-	if (!LHS) return nullptr;
-
-	op = tokens.front().type;
-	if (op == QUESTION) {
-		return conditional_expression(tokens, std::move(LHS));
-	}
-
-	if (op == COLON) {
-		tokens.pop_front();	//eat :
-		auto RHS = logical_or_expression(tokens, nullptr);
-		if (!RHS) 		return nullptr;
-		return conditional_expression(tokens, std::make_unique<ConditionalExprAST>(std::move(COND), std::move(LHS), std::move(RHS)));
-	}
-	else {
-		Error("expected ':'\n");
-		//return nullptr;
-	}
-	return LHS;
-}
-
-
-
-/*-----------------------------------------------------------------------------
-expression
-: equality_expression
-*/
-static std::unique_ptr<ExprAST> expression(std::list<Token>& tokens) {
-	FUNCTION_CALL_TRACE();
-	return conditional_expression(tokens, nullptr);
 }
 
 

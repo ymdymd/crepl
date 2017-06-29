@@ -16,7 +16,7 @@
 #define TO_STR(...) #__VA_ARGS__
 #define TEST_EVAL(expr_str) ASSERT_EQ( (int)(expr_str), (int)expr::eval(TO_STR(expr_str)))
 
-TEST(eval, immidate)
+TEST(eval, binary_expression)
 {
 	TEST_EVAL(3 + 2);
 	TEST_EVAL(3 - 2);
@@ -36,11 +36,25 @@ TEST(eval, immidate)
 	TEST_EVAL(3 | 2);
 	TEST_EVAL(3 && 2);
 	TEST_EVAL(3 || 2);
-	TEST_EVAL(3 ? 2: 1);
+}
+
+TEST(eval, unary_expression)
+{
 	TEST_EVAL(+3);
 	TEST_EVAL(-3);
 	TEST_EVAL(~3);
 	TEST_EVAL(!3);
+}
+
+TEST(eval, conditional_expression)
+{
+	TEST_EVAL(3 ? 2 : 1);
+	TEST_EVAL(0 ? 1 : 2);
+}
+
+
+TEST(eval, expression)
+{
 	TEST_EVAL(1 + 2 * 3);
 	TEST_EVAL(1 * 2 + 3);
 	TEST_EVAL(1 * (2 + 3));
@@ -48,6 +62,7 @@ TEST(eval, immidate)
 	TEST_EVAL(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
 	TEST_EVAL(1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
 	TEST_EVAL(1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9);
+	TEST_EVAL(1 + 2 - 3 + 4 - 5 + 6 - 7 + 8 - 9);
 	TEST_EVAL((1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9);
 	TEST_EVAL((1 + 2 * 3) + (4 * 5 + 6) * (7 + 8 * 9));
 	TEST_EVAL(((1 + 2 )* 3) + (4 * (5 + 6)) * ((7 + 8) * 9));
@@ -138,7 +153,21 @@ TEST(eval, this_pointer)
 
 int main(int argc, char** argv)
 {
+#if 0
+//	const std::string expr_str = "(1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9";
+//	const std::string expr_str = "1 + 2 * 3";
+//	const std::string expr_str = "1 * 2 + 3";
+	const std::string expr_str = "3? 2:1";
+	int val = expr::eval(expr_str);
+	std::cout << val << std::endl;
+	return val;
+#else
+#ifdef _DEBUG
+	//--gtest_break_on_failure
+	testing::GTEST_FLAG(break_on_failure) = true;
+#endif
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
+#endif
 }
 
