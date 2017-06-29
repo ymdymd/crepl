@@ -81,7 +81,6 @@ enum Type {
 class ExprAST {
 public:
 	const Type type;		//node type
-//	ExprAST() : type(0) {}
 	ExprAST(const Type _type) : type(_type){}
 	virtual ~ExprAST() {}
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return 0; }
