@@ -15,7 +15,7 @@
 
 
 TEST(lexer, basic) {
-	std::string str = "1+2*3";
+	std::string str;
 	std::list<expr::Token> expects = {
 		{ expr::IMM, "1" },
 		{ expr::ADD, "+" },
@@ -24,6 +24,9 @@ TEST(lexer, basic) {
 		{ expr::IMM, "3" },
 		{ expr::EOL, "" },
 	};
+	for (auto ite = expects.begin(); ite != expects.end(); ++ite) {
+		str += ite->str;
+	}
 
 	auto tokens = expr::lexer(str);
 	ASSERT_EQ(expects.size(), tokens.size());
