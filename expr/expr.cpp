@@ -32,15 +32,6 @@ static void Error(const std::string& msg) {
 
 
 
-//-----------------------------------------------------------------------------
-// token struct
-struct Token {
-	Type type;			//token type
-	std::string str;	//token string
-	Token(void) : type(EOL), str("") {};
-	Token(Type _type, std::string _str) : type(_type), str(_str) {};
-};
-
 
 //-----------------------------------------------------------------------------
 // Lexer

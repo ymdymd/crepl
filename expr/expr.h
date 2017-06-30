@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <list>
 #include <string>
 
 
@@ -38,6 +39,10 @@
 */
 
 namespace expr {
+
+//=============================================================================
+// enum/struct/class
+
 //-----------------------------------------------------------------------------
 // token / node type definition
 enum Type {
@@ -77,6 +82,17 @@ enum Type {
 };
 
 //-----------------------------------------------------------------------------
+// token struct
+struct Token {
+	Type type;			//token type
+	std::string str;	//token string
+	Token(void) : type(EOL), str("") {};
+	Token(Type _type, std::string _str) : type(_type), str(_str) {};
+};
+
+
+
+//-----------------------------------------------------------------------------
 // AST (Abstract Syntax Tree)
 class ExprAST {
 public:
@@ -86,8 +102,16 @@ public:
 	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return 0; }
 };
 
+
+//=============================================================================
+// functions
+
 //-----------------------------------------------------------------------------
-// evalute expr_str
+// lexer lexical analyzer
+std::list<Token> lexer(std::string line);
+
+//-----------------------------------------------------------------------------
+// parser
 std::unique_ptr<ExprAST> parser(const std::string expr_str);
 
 //-----------------------------------------------------------------------------

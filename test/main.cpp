@@ -13,6 +13,28 @@
 //test & main
 #include <gtest/gtest.h>
 
+
+TEST(lexer, basic) {
+	std::string str = "1+2*3";
+	std::list<expr::Token> expects = {
+		{ expr::IMM, "1" },
+		{ expr::ADD, "+" },
+		{ expr::IMM, "2" },
+		{ expr::MUL, "*" },
+		{ expr::IMM, "3" },
+		{ expr::EOL, "" },
+	};
+
+	auto tokens = expr::lexer(str);
+	ASSERT_EQ(expects.size(), tokens.size());
+	for (auto ite = expects.begin(), ita = tokens.begin(); ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
+		ASSERT_EQ(ite->type, ita->type);
+		ASSERT_EQ(ite->str, ita->str);
+	}
+
+}
+
+
 #define TO_STR(...) #__VA_ARGS__
 #define TEST_EVAL(expr_str) ASSERT_EQ( (int)(expr_str), (int)expr::eval(TO_STR(expr_str)))
 
