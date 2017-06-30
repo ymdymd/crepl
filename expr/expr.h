@@ -46,6 +46,7 @@ namespace expr {
 //-----------------------------------------------------------------------------
 // token / node type definition
 enum Type {
+	INVALID = -1,	// invalid token
 	EOL = 0,		// End Of Line must be 0.
 	IMM,			//	  integer_expression	
 	VAR,			//    variable_expression

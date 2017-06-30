@@ -43,7 +43,7 @@ std::list<Token> lexer(std::string line) {
 
 	std::vector<Token> keywords = {
 		{ IMM,		R"(^[0-9]+)" },
-		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]+)" },
+		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]*)" },
 		{ REG,		R"(^\%[a-zA-Z][0-9]+)" },
 		{ SFTL,		R"(^\<\<)" },
 		{ SFTR,		R"(^\>\>)" },
@@ -97,7 +97,7 @@ std::list<Token> lexer(std::string line) {
 		}
 		else {	//見つからなかった場合は、残りをすべてtokensに入れる
 			token.str = std::string(itr, ite);
-			token.type = keywords[i].type;
+			token.type = INVALID;
 			tokens.push_back(token);
 			break;
 		}

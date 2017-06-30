@@ -13,9 +13,41 @@
 //test & main
 #include <gtest/gtest.h>
 
+void test_lexer_helper(std::list<expr::Token>& expects) {
+	std::string str;
+	for (auto ite = expects.begin(); ite != expects.end(); ++ite) {
+		str += ite->str;
+	}
+	auto tokens = expr::lexer(str);
+	ASSERT_EQ(expects.size(), tokens.size());
+	for (auto ite = expects.begin(), ita = tokens.begin(); ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
+		ASSERT_EQ(ite->type, ita->type);
+		ASSERT_EQ(ite->str, ita->str);
+	}
+}
+
+void test_lexer_helper(std::list<std::string> expects) {
+	std::string str;
+	for (auto ite = expects.begin(); ite != expects.end(); ++ite) {
+		str += *ite + " ";
+	}
+	auto tokens = expr::lexer(str);
+	ASSERT_EQ(expects.size()+1, tokens.size());
+	auto ita = tokens.begin();
+	for (auto ite = expects.begin() ; ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
+		ASSERT_EQ(*ite, ita->str);
+	}
+}
+
+TEST(lexer, words) {
+	test_lexer_helper({ "a" });
+	test_lexer_helper({ "hoge" });
+	test_lexer_helper({ "20170630" });
+	test_lexer_helper({ "this","is","a","pen" });
+}
+
 
 TEST(lexer, basic) {
-	std::string str;
 	std::list<expr::Token> expects = {
 		{ expr::IMM, "1" },
 		{ expr::ADD, "+" },
@@ -24,17 +56,7 @@ TEST(lexer, basic) {
 		{ expr::IMM, "3" },
 		{ expr::EOL, "" },
 	};
-	for (auto ite = expects.begin(); ite != expects.end(); ++ite) {
-		str += ite->str;
-	}
-
-	auto tokens = expr::lexer(str);
-	ASSERT_EQ(expects.size(), tokens.size());
-	for (auto ite = expects.begin(), ita = tokens.begin(); ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
-		ASSERT_EQ(ite->type, ita->type);
-		ASSERT_EQ(ite->str, ita->str);
-	}
-
+	test_lexer_helper(expects);
 }
 
 
