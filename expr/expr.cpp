@@ -36,7 +36,7 @@ static void Error(const std::string& msg) {
 //-----------------------------------------------------------------------------
 // Lexer
 // lineの文字列をtokenに分割する。
-std::list<Token> lexer(std::string line) {
+std::list<Token> lexer(const std::string& line) {
 	std::list<Token> tokens;
 	auto itr = line.cbegin();
 	auto ite = line.cend();
@@ -115,20 +115,20 @@ std::list<Token> lexer(std::string line) {
 // IntegerExprAST - Expression class for integer literals like "1".
 // IntegerExprAST - "1"のような整数数値リテラルのための式クラス。
 class IntegerExprAST : public ExprAST {
-	int Val;
+	const int Val;
 public:
 	IntegerExprAST(int val) : ExprAST(IMM) , Val(val) {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return Val; }
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) { return Val; }
 };
 
 //-----------------------------------------------------------------------------
 // VariableExprAST - Expression class for referencing a variable, like "a".
 // VariableExprAST - "a"のような変数を参照するための式クラス。
 class VariableExprAST : public ExprAST {
-	std::string Name;
+	const std::string Name;
 public:
-	VariableExprAST(const std::string &Name) : ExprAST(VAR) , Name(Name) {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return fp ? fp(Name,_this) : 0; }
+	VariableExprAST(const std::string& Name) : ExprAST(VAR) , Name(Name) {}
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) { return fp ? fp(Name,_this) : 0; }
 };
 
 //-----------------------------------------------------------------------------
@@ -138,7 +138,7 @@ class UnaryExprAST : public ExprAST {
 public:
 	UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
 		: ExprAST(type), rhs(std::move(rhs)) {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) {
 		switch (type) {
 		case(ADD): return +rhs->eval(fp, _this);
 		case(SUB): return -rhs->eval(fp, _this);
@@ -157,7 +157,7 @@ class BinaryExprAST : public ExprAST {
 public:
 	BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs, std::unique_ptr<ExprAST> rhs)
 		: ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) {
 		switch (type) {
 		case(ADD): return lhs->eval(fp, _this) + rhs->eval(fp, _this);
 		case(SUB): return lhs->eval(fp, _this) - rhs->eval(fp, _this);
@@ -190,7 +190,7 @@ public:
 	ConditionalExprAST(std::unique_ptr<ExprAST> cond,
 		std::unique_ptr<ExprAST> lhs, std::unique_ptr<ExprAST> rhs)
 		: ExprAST(QUESTION) , cond(std::move(cond)), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) {
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) {
 		return cond->eval(fp, _this) ? lhs->eval(fp, _this) : rhs->eval(fp, _this);
 	}
 };
@@ -545,13 +545,13 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
 
 //=============================================================================
 // evalute expr_str
-std::unique_ptr<ExprAST> parser(const std::string expr_str) {
+std::unique_ptr<ExprAST> parser(const std::string& expr_str) {
 	return expression(lexer(expr_str));
 }
 
 //=============================================================================
 // evalute expr_str
-int eval(const std::string expr_str, int(*fp)(std::string&, void*), void* _this) {
+int eval(const std::string expr_str, int(*fp)(const std::string&, void*), void* _this) {
 	return parser(expr_str)->eval(fp, _this);
 }
 

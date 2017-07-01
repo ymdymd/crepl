@@ -123,7 +123,7 @@ TEST(eval, expression)
 
 
 std::map<std::string, int> Var;
-int getVar(std::string& symbol, void* _this) {
+int getVar(const std::string& symbol, void* _this) {
 	return Var[symbol];
 }
 
@@ -136,7 +136,7 @@ TEST(eval, variable)
 
 
 int Reg[16];
-int getReg(std::string& symbol, void* _this) {
+int getReg(const std::string& symbol, void* _this) {
 	std::smatch m;
 	int idx;
 	if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -161,7 +161,7 @@ TEST(eval, reg)
 class Foo {
 public:
 	int reg[16];
-	int getReg(std::string& name) {
+	int getReg(const std::string& name) {
 		std::smatch m;
 		int idx;
 		if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -172,7 +172,7 @@ public:
 };
 
 static
-int __read_reg(std::string& name, void* _this) {
+int __read_reg(const std::string& name, void* _this) {
 	std::smatch m;
 	int idx;
 	if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -205,7 +205,8 @@ int main(int argc, char** argv)
 	//	const std::string expr_str = "(1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9";
 	//	const std::string expr_str = "1 + 2 * 3";
 	//	const std::string expr_str = "1 * 2 + 3";
-	const std::string expr_str = "3? 2:1";
+	//const std::string expr_str = "3? 2:1";
+	const std::string expr_str = "1+2";
 	int val = expr::eval(expr_str);
 	std::cout << val << std::endl;
 	return val;

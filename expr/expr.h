@@ -100,7 +100,7 @@ public:
 	const Type type;		//node type
 	ExprAST(const Type _type) : type(_type){}
 	virtual ~ExprAST() {}
-	virtual int eval(int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr) { return 0; }
+	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) = 0;
 };
 
 
@@ -109,14 +109,14 @@ public:
 
 //-----------------------------------------------------------------------------
 // lexer lexical analyzer
-std::list<Token> lexer(std::string line);
+std::list<Token> lexer(const std::string& line);
 
 //-----------------------------------------------------------------------------
 // parser
-std::unique_ptr<ExprAST> parser(const std::string expr_str);
+std::unique_ptr<ExprAST> parser(const std::string& expr_str);
 
 //-----------------------------------------------------------------------------
 // evalute expr_str
-int eval(const std::string expr_str, int(*fp)(std::string&, void*) = nullptr, void* _this = nullptr);
+int eval(const std::string expr_str, int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr);
 
 }	//namespace expr
