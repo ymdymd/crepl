@@ -42,35 +42,45 @@ std::list<Token> lexer(const std::string& line) {
 	auto ite = line.cend();
 
 	std::vector<Token> keywords = {
-		{ IMM,		R"(^[0-9]+)" },
-		{ VAR,		R"(^[a-zA-Z][a-zA-Z0-9]*)" },
-		{ REG,		R"(^\%[a-zA-Z][0-9]+)" },
-		{ SFTL,		R"(^\<\<)" },
-		{ SFTR,		R"(^\>\>)" },
-		{ EQ,		R"(^\=\=)" },
-		{ NE,		R"(^\!\=)" },
-		{ LE,		R"(^\<\=)" },
-		{ GE,		R"(^\>\=)" },
-		{ LAND,		R"(^\&\&)" },
-		{ LOR,		R"(^\|\|)" },
-		{ LT,		R"(^\<)" },
-		{ GT,		R"(^\>)" },
-		{ ADD,		R"(^\+)" },
-		{ SUB,		R"(^\-)" },
-		{ MUL,		R"(^\*)" },
-		{ DIV,		R"(^\/)" },
-		{ MOD,		R"(^\%)" },
-		{ AND,		R"(^\&)" },
-		{ OR,		R"(^\|)" },
-		{ XOR,		R"(^\^)" },
-		{ INV,		R"(^\~)" },
-		{ NOT,		R"(^\!)" },
-		{ PARL,		R"(^\()" },
-		{ PARR,		R"(^\))" },
-		{ SEMICOLON,R"(^\;)" },
-		{ COLON,    R"(^\:)" },
-		{ QUESTION, R"(^\?)" },
-		{ ASSIGN,	R"(^\=)" },
+		{ IMM,			R"(^[0-9]+)" },
+		{ VAR,			R"(^[a-zA-Z][a-zA-Z0-9]*)" },
+		{ REG,			R"(^\%[a-zA-Z][0-9]+)" },
+		{ ASSIGN_SL,	R"(^\<\<\=)" },
+		{ ASSIGN_SR,	R"(^\>\>\=)" },
+		{ ASSIGN_OR,	R"(^\|\=)" },
+		{ ASSIGN_XOR,	R"(^\^\=)" },
+		{ ASSIGN_AND,	R"(^\&\=)" },
+		{ ASSIGN_ADD,	R"(^\+\=)" },
+		{ ASSIGN_SUB,	R"(^\-\=)" },
+		{ ASSIGN_MUL,	R"(^\*\=)" },
+		{ ASSIGN_DIV,	R"(^\/\=)" },
+		{ ASSIGN_MOD,	R"(^\%\=)" },
+		{ SFTL,			R"(^\<\<)" },
+		{ SFTR,			R"(^\>\>)" },
+		{ EQ,			R"(^\=\=)" },
+		{ NE,			R"(^\!\=)" },
+		{ LE,			R"(^\<\=)" },
+		{ GE,			R"(^\>\=)" },
+		{ LAND,			R"(^\&\&)" },
+		{ LOR,			R"(^\|\|)" },
+		{ LT,			R"(^\<)" },
+		{ GT,			R"(^\>)" },
+		{ ADD,			R"(^\+)" },
+		{ SUB,			R"(^\-)" },
+		{ MUL,			R"(^\*)" },
+		{ DIV,			R"(^\/)" },
+		{ MOD,			R"(^\%)" },
+		{ AND,			R"(^\&)" },
+		{ OR,			R"(^\|)" },
+		{ XOR,			R"(^\^)" },
+		{ INV,			R"(^\~)" },
+		{ NOT,			R"(^\!)" },
+		{ PARL,			R"(^\()" },
+		{ PARR,			R"(^\))" },
+		{ SEMICOLON,	R"(^\;)" },
+		{ COLON,		R"(^\:)" },
+		{ QUESTION,		R"(^\?)" },
+		{ ASSIGN,		R"(^\=)" },
 	};
 
 	while (itr != ite) {
@@ -146,6 +156,7 @@ public:
 		case(INV): return ~rhs->eval(fp, _this);
 		case(NOT): return !rhs->eval(fp, _this);
 		}
+		assert(0 && "unknown operator");
 		return 0;
 	}
 };
@@ -179,6 +190,7 @@ public:
 		case(GT):  return lhs->eval(fp, _this) >  rhs->eval(fp, _this);
 		case(GE):  return lhs->eval(fp, _this) >= rhs->eval(fp, _this);
 		}
+		assert(0 && "unknown operator");
 		return 0;
 	}
 };
@@ -209,12 +221,22 @@ public:
 		VariableExprAST* lhs_ast = static_cast<VariableExprAST*>(lhs.get());
 		int & lhs_ref = fp(lhs_ast->Name, _this);
 		switch (type) {
-		case(ASSIGN):	return lhs_ref = rhs->eval(fp, _this);
+		case(ASSIGN):		return lhs_ref =   rhs->eval(fp, _this);
+		case(ASSIGN_OR):	return lhs_ref |=  rhs->eval(fp, _this);
+		case(ASSIGN_XOR):	return lhs_ref ^=  rhs->eval(fp, _this);
+		case(ASSIGN_AND):	return lhs_ref &=  rhs->eval(fp, _this);
+		case(ASSIGN_SL):	return lhs_ref <<= rhs->eval(fp, _this);
+		case(ASSIGN_SR):	return lhs_ref >>= rhs->eval(fp, _this);
+		case(ASSIGN_ADD):	return lhs_ref +=  rhs->eval(fp, _this);
+		case(ASSIGN_SUB):	return lhs_ref -=  rhs->eval(fp, _this);
+		case(ASSIGN_MUL):	return lhs_ref *=  rhs->eval(fp, _this);
+		case(ASSIGN_DIV):	return lhs_ref /=  rhs->eval(fp, _this);
+		case(ASSIGN_MOD):	return lhs_ref %=  rhs->eval(fp, _this);
 		}
+		assert(0 && "unknown operator");
 		return 0;
 	}
 };
-
 
 //=============================================================================
 // Parser
@@ -504,14 +526,12 @@ static std::unique_ptr<ExprAST> assignment_expression(std::list<Token>& tokens, 
 	if (!lhs) return nullptr;
 
 	Type opc = tokens.front().type;
-	if (opc == ASSIGN) {
-		tokens.pop_front();	//eat opc
-		auto rhs = assignment_expression(tokens, nullptr);
-		if (!rhs) return nullptr;
-		return assignment_expression(tokens,std::make_unique<AssignExprAST>(opc, std::move(lhs), std::move(rhs)));
-	}
+	if (opc < ASSIGN_BIGIN || ASSIGN_END < opc) 	return lhs;
 
-	return lhs;
+	tokens.pop_front();	//eat opc
+	auto rhs = assignment_expression(tokens, nullptr);
+	if (!rhs) return nullptr;
+	return assignment_expression(tokens,std::make_unique<AssignExprAST>(opc, std::move(lhs), std::move(rhs)));
 }
 
 

@@ -53,11 +53,27 @@ enum Type {
 	REG,			//	  register_variable_expression	
 	PARL,			// (  parenthesis_expression 
 	PARR,			// )  parenthesis_expression
-	ASSIGN,			// =  assignment_expression
 	QUESTION,		// ?  conditional_expression
 	SEMICOLON,		// :
 	COLON,			// ;
 
+	//assignment_expression 
+	ASSIGN_BIGIN,
+	ASSIGN,			// =  assignment_expression
+	ASSIGN_OR,		// |=  assignment_expression
+	ASSIGN_XOR,		// ^=  assignment_expression
+	ASSIGN_AND,		// &=  assignment_expression
+	ASSIGN_SL,		// <<=  assignment_expression
+	ASSIGN_SR,		// >>=  assignment_expression
+	ASSIGN_ADD,		// +=  assignment_expression
+	ASSIGN_SUB,		// -=  assignment_expression
+	ASSIGN_MUL,		// *=  assignment_expression
+	ASSIGN_DIV,		// /=  assignment_expression
+	ASSIGN_MOD,		// %=  assignment_expression
+	ASSIGN_END,
+
+	//binary_ops_expression 
+	BINOP_BIGIN,
 	LOR,			// || logical_or_expression
 	LAND,			// && logical_and_expression
 	OR,				// |  inclusive_or_expression
@@ -76,11 +92,12 @@ enum Type {
 	MUL,			// *  multiplicative_expression
 	DIV,			// /  multiplicative_expression
 	MOD,			// %  multiplicative_expression
+	BINOP_END,
+
+	//unary_expression  
 	INV,			// ~  unary_expression 
 	NOT,			// !  unary_expression
 
-	BINOP_BIGIN	= LOR,
-	BINOP_END = MOD,
 };
 
 //-----------------------------------------------------------------------------

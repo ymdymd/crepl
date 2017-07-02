@@ -123,29 +123,30 @@ TEST(eval, expression)
 
 
 int a, b, c, d, e, f, g = 0;
+int _a, _b, _c, _d, _e, _f, _g = 0;
 
 int& getVar(const std::string& symbol, void* _this) {
-	if (symbol == "a") return a;
-	if (symbol == "b") return b;
-	if (symbol == "c") return c;
-	if (symbol == "d") return d;
-	if (symbol == "e") return e;
-	if (symbol == "f") return f;
-	if (symbol == "g") return g;
-	return a;
+	if (symbol == "a") return _a;
+	if (symbol == "b") return _b;
+	if (symbol == "c") return _c;
+	if (symbol == "d") return _d;
+	if (symbol == "e") return _e;
+	if (symbol == "f") return _f;
+	if (symbol == "g") return _g;
+	return _a;
 }
 
 #define TEST_VAR(expr_str) ASSERT_EQ((int)(expr_str), (int)expr::eval(TO_STR(expr_str), getVar))
 
 TEST(eval, variable_expression)
 {
-	a = 1;
-	b = 2;
-	c = 3;
-	d = 4;
-	e = 5;
-	f = 6;
-	g = 7;
+	_a = a = 1;
+	_b = b = 2;
+	_c = c = 3;
+	_d = d = 4;
+	_e = e = 5;
+	_f = f = 6;
+	_g = g = 7;
 
 	TEST_VAR(a);
 	TEST_VAR(b);
@@ -167,14 +168,34 @@ TEST(eval, assign_expression)
 	TEST_VAR(g = a = b = c = d = e = f) ;
 }
 
+TEST(eval, assign_op_expression)
+{
+	_a = a = 3;
+	TEST_VAR(a |= 2);
+	TEST_VAR(a ^= 2);
+	TEST_VAR(a &= 2);
+	_a = a = 3;
+	TEST_VAR(a <<= 2);
+	TEST_VAR(a >>= 2);
+	_a = a = 3;
+	TEST_VAR(a += 2);
+	TEST_VAR(a -= 2);
+	TEST_VAR(a *= 2);
+	TEST_VAR(a /= 2);
+	TEST_VAR(a %= 2);
+
+}
+
+
 TEST(eval, expression2)
 {
-	a = 1;
-	b = 2;
-	c = 3;
-	d = 4;
-	e = 5;
-	f = 6;
+	_a = a = 1;
+	_b = b = 2;
+	_c = c = 3;
+	_d = d = 4;
+	_e = e = 5;
+	_f = f = 6;
+	_g = g = 7;
 	TEST_VAR(g = a + b + c + d + e + f);
 	TEST_VAR(g = a + b * c + d * e + f);
 	TEST_VAR(g = a * b + c * d + e * f);
