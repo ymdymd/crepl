@@ -29,7 +29,12 @@ int main(int argc, char** argv)
 			}
 		}
 		else {	// evalute expresion
-			std::cout << expr::eval(s, get_symbol_val,&symbol) << std::endl;
+			try {
+				std::cout << expr::eval(s, get_symbol_val, &symbol) << std::endl;
+			}
+			catch (const std::runtime_error& e) {
+				std::cout << e.what() << std::endl;
+			}
 		}
 		std::cout << ">";
 	} while (std::getline(std::cin, s));

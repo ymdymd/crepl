@@ -60,6 +60,20 @@ TEST(lexer, basic) {
 }
 
 
+TEST(lexer, invalid_token) {
+	std::string str = "#";
+
+	ASSERT_ANY_THROW({
+		auto tokens = expr::lexer(str);
+	});
+	
+
+}
+
+
+
+//=============================================================================
+
 #define TO_STR(...) #__VA_ARGS__
 #define TEST_EVAL(expr_str) ASSERT_EQ( (int)(expr_str), (int)expr::eval(TO_STR(expr_str)))
 
@@ -272,12 +286,12 @@ TEST(eval, this_pointer)
 
 int main(int argc, char** argv)
 {
-#if 0
+#if 1
 	//	const std::string expr_str = "(1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9";
 	//	const std::string expr_str = "1 + 2 * 3";
 	//	const std::string expr_str = "1 * 2 + 3";
 	//const std::string expr_str = "3? 2:1";
-	const std::string expr_str = "1+2";
+	const std::string expr_str = "#";
 	int val = expr::eval(expr_str);
 	std::cout << val << std::endl;
 	return val;
@@ -290,8 +304,6 @@ int main(int argc, char** argv)
 	return RUN_ALL_TESTS();
 #endif
 }
-
-
 
 
 

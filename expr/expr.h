@@ -122,6 +122,13 @@ public:
 };
 
 
+//-----------------------------------------------------------------------------
+// exception
+typedef std::runtime_error expr_error;
+
+//class expr_error : public std::runtime_error {
+//};
+
 //=============================================================================
 // functions
 

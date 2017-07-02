@@ -23,6 +23,7 @@ namespace expr {
 //-----------------------------------------------------------------------------
 // error
 static void Error(const std::string& msg) {
+	throw expr_error(msg);
 	std::cerr << msg;
 }
 
@@ -107,6 +108,9 @@ std::list<Token> lexer(const std::string& line) {
 			tokens.push_back(token);
 		}
 		else {	//見つからなかった場合は、残りをすべてtokensに入れる
+#if 1
+			Error("invalid token");
+#endif
 			token.str = std::string(itr, ite);
 			token.type = INVALID;
 			tokens.push_back(token);
@@ -156,7 +160,7 @@ public:
 		case(INV): return ~rhs->eval(fp, _this);
 		case(NOT): return !rhs->eval(fp, _this);
 		}
-		assert(0 && "unknown operator");
+		Error("unknown operator");
 		return 0;
 	}
 };
@@ -190,7 +194,7 @@ public:
 		case(GT):  return lhs->eval(fp, _this) >  rhs->eval(fp, _this);
 		case(GE):  return lhs->eval(fp, _this) >= rhs->eval(fp, _this);
 		}
-		assert(0 && "unknown operator");
+		Error("unknown operator");
 		return 0;
 	}
 };
@@ -217,7 +221,10 @@ public:
 		: ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 	virtual int eval(int&(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) {
 		if (!fp) return 0;
-		assert(lhs->type == VAR);
+
+		if (lhs->type != VAR) {
+			Error("cannot assign to except for variables");
+		}
 		VariableExprAST* lhs_ast = static_cast<VariableExprAST*>(lhs.get());
 		int & lhs_ref = fp(lhs_ast->Name, _this);
 		switch (type) {
@@ -233,7 +240,7 @@ public:
 		case(ASSIGN_DIV):	return lhs_ref /=  rhs->eval(fp, _this);
 		case(ASSIGN_MOD):	return lhs_ref %=  rhs->eval(fp, _this);
 		}
-		assert(0 && "unknown operator");
+		Error("unknown operator");
 		return 0;
 	}
 };
@@ -508,7 +515,7 @@ static std::unique_ptr<ExprAST> conditional_expression(std::list<Token>& tokens,
 	}
 	else {
 		Error("expected ':'\n");
-		//return nullptr;
+		return nullptr;
 	}
 	return lhs;
 }
