@@ -8,15 +8,27 @@
 #include <map>
 #include "expr.h"
 
+//-----------------------------------------------------------------------------
+#include <cstdarg>
+static
+std::string format_str(const char *fmt, ...) {
+	static char buf[2048];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+	return std::string(buf);
+}
 
-//=============================================================================
-//main
 
+//-----------------------------------------------------------------------------
 static
 int& get_symbol_val(const std::string& name, void* _this) {
 	return (*static_cast<std::map<std::string, int>*>(_this))[name];
 }
 
+//=============================================================================
+//main
 int main(int argc, char** argv)
 {
 	std::map<std::string, int> symbol;
@@ -30,7 +42,8 @@ int main(int argc, char** argv)
 		}
 		else {	// evalute expresion
 			try {
-				std::cout << expr::eval(s, get_symbol_val, &symbol) << std::endl;
+				int val = expr::eval(s, get_symbol_val, &symbol);
+				std::cout << format_str("(0x%08x) %d\n",val, val);
 			}
 			catch (const std::runtime_error& e) {
 				std::cout << e.what() << std::endl;
