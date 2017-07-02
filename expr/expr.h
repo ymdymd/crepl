@@ -53,6 +53,7 @@ enum Type {
 	REG,			//	  register_variable_expression	
 	PARL,			// (  parenthesis_expression 
 	PARR,			// )  parenthesis_expression
+	ASSIGN,			// =  assignment_expression
 	QUESTION,		// ?  conditional_expression
 	SEMICOLON,		// :
 	COLON,			// ;
@@ -62,7 +63,7 @@ enum Type {
 	OR,				// |  inclusive_or_expression
 	XOR,			// ^  exclusive_or_expression
 	AND,			// &  and_expression
-	EQ,				// =  equality_expression
+	EQ,				// == equality_expression
 	NE,				// != equality_expression
 	LT,				// <  relational_expression
 	LE,				// <= relational_expression
@@ -100,7 +101,7 @@ public:
 	const Type type;		//node type
 	ExprAST(const Type _type) : type(_type){}
 	virtual ~ExprAST() {}
-	virtual int eval(int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) = 0;
+	virtual int eval(int&(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr) = 0;
 };
 
 
@@ -117,6 +118,6 @@ std::unique_ptr<ExprAST> parser(const std::string& expr_str);
 
 //-----------------------------------------------------------------------------
 // evalute expr_str
-int eval(const std::string expr_str, int(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr);
+int eval(const std::string expr_str, int&(*fp)(const std::string&, void*) = nullptr, void* _this = nullptr);
 
 }	//namespace expr

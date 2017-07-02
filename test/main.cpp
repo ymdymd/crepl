@@ -122,21 +122,71 @@ TEST(eval, expression)
 }
 
 
-std::map<std::string, int> Var;
-int getVar(const std::string& symbol, void* _this) {
-	return Var[symbol];
+int a, b, c, d, e, f, g = 0;
+
+int& getVar(const std::string& symbol, void* _this) {
+	if (symbol == "a") return a;
+	if (symbol == "b") return b;
+	if (symbol == "c") return c;
+	if (symbol == "d") return d;
+	if (symbol == "e") return e;
+	if (symbol == "f") return f;
+	if (symbol == "g") return g;
+	return a;
 }
 
-TEST(eval, variable)
+#define TEST_VAR(expr_str) ASSERT_EQ((int)(expr_str), (int)expr::eval(TO_STR(expr_str), getVar))
+
+TEST(eval, variable_expression)
 {
-	std::string symbol = "hoge";
-	Var[symbol] = 2;
-	ASSERT_EQ((int)Var[symbol], (int)expr::eval(symbol, getVar));
+	a = 1;
+	b = 2;
+	c = 3;
+	d = 4;
+	e = 5;
+	f = 6;
+	g = 7;
+
+	TEST_VAR(a);
+	TEST_VAR(b);
+	TEST_VAR(c);
+	TEST_VAR(d);
+	TEST_VAR(e);
+	TEST_VAR(f);
+	TEST_VAR(g);
 }
+
+TEST(eval, assign_expression)
+{
+	TEST_VAR(a = 2);
+	TEST_VAR(b = 3);
+	TEST_VAR(c = 4);
+	TEST_VAR(d = a);
+	TEST_VAR(e = b);
+	TEST_VAR(f = c);
+	TEST_VAR(g = a = b = c = d = e = f) ;
+}
+
+TEST(eval, expression2)
+{
+	a = 1;
+	b = 2;
+	c = 3;
+	d = 4;
+	e = 5;
+	f = 6;
+	TEST_VAR(g = a + b + c + d + e + f);
+	TEST_VAR(g = a + b * c + d * e + f);
+	TEST_VAR(g = a * b + c * d + e * f);
+	TEST_VAR(g = (a + b) * (c + d) * (e + f));
+
+}
+
+
 
 
 int Reg[16];
-int getReg(const std::string& symbol, void* _this) {
+int& getReg(const std::string& symbol, void* _this) {
 	std::smatch m;
 	int idx;
 	if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -161,7 +211,7 @@ TEST(eval, reg)
 class Foo {
 public:
 	int reg[16];
-	int getReg(const std::string& name) {
+	int& getReg(const std::string& name) {
 		std::smatch m;
 		int idx;
 		if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -172,7 +222,7 @@ public:
 };
 
 static
-int __read_reg(const std::string& name, void* _this) {
+int& __read_reg(const std::string& name, void* _this) {
 	std::smatch m;
 	int idx;
 	if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
