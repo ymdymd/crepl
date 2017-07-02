@@ -43,6 +43,7 @@ std::list<Token> lexer(const std::string& line) {
 	auto ite = line.cend();
 
 	std::vector<Token> keywords = {
+		{ IMM,			R"(^0x[0-9a-fA-F]+)" },
 		{ IMM,			R"(^[0-9]+)" },
 		{ VAR,			R"(^[a-zA-Z][a-zA-Z0-9]*)" },
 		{ REG,			R"(^\%[a-zA-Z][0-9]+)" },
@@ -559,7 +560,7 @@ integer_expression (terminate)
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token>& tokens) {
 	FUNCTION_CALL_TRACE();
 	assert(tokens.front().type == IMM);
-	int value = std::stoi(tokens.front().str);
+	int value = (int)std::stoll(tokens.front().str, nullptr,0);
 	auto Result = std::make_unique<IntegerExprAST>(value);
 	tokens.pop_front();											// consume the number
 	return std::move(Result);
@@ -610,6 +611,11 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token>& tokens) {
 	}
 }
 
+
+//=============================================================================
+std::unique_ptr<ExprAST> parser(std::list<Token>& tokens) {
+	return expression(tokens);
+}
 
 //=============================================================================
 // evalute expr_str

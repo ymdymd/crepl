@@ -138,6 +138,7 @@ std::list<Token> lexer(const std::string& line);
 
 //-----------------------------------------------------------------------------
 // parser
+std::unique_ptr<ExprAST> parser(std::list<Token>& tokens);
 std::unique_ptr<ExprAST> parser(const std::string& expr_str);
 
 //-----------------------------------------------------------------------------
