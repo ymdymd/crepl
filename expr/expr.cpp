@@ -160,8 +160,8 @@ public:
 		case(SUB): return -rhs->eval(fp, _this);
 		case(INV): return ~rhs->eval(fp, _this);
 		case(NOT): return !rhs->eval(fp, _this);
+		default: Error("unknown operator");
 		}
-		Error("unknown operator");
 		return 0;
 	}
 };
@@ -194,8 +194,8 @@ public:
 		case(LE):  return lhs->eval(fp, _this) <= rhs->eval(fp, _this);
 		case(GT):  return lhs->eval(fp, _this) >  rhs->eval(fp, _this);
 		case(GE):  return lhs->eval(fp, _this) >= rhs->eval(fp, _this);
+		default: Error("unknown operator");
 		}
-		Error("unknown operator");
 		return 0;
 	}
 };
@@ -240,8 +240,8 @@ public:
 		case(ASSIGN_MUL):	return lhs_ref *=  rhs->eval(fp, _this);
 		case(ASSIGN_DIV):	return lhs_ref /=  rhs->eval(fp, _this);
 		case(ASSIGN_MOD):	return lhs_ref %=  rhs->eval(fp, _this);
+		default: Error("unknown operator");
 		}
-		Error("unknown operator");
 		return 0;
 	}
 };
@@ -620,7 +620,8 @@ std::unique_ptr<ExprAST> parser(std::list<Token>& tokens) {
 //=============================================================================
 // evalute expr_str
 std::unique_ptr<ExprAST> parser(const std::string& expr_str) {
-	return expression(lexer(expr_str));
+	auto tokens = lexer(expr_str);
+	return expression(tokens);
 }
 
 //=============================================================================
