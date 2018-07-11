@@ -65,6 +65,11 @@ clean:
 run:
 	cd $(BUILD_DIR) && ./$(TARGET)
 
+.PHONY: format
+ 
+format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
+	clang-format -i $^
+
 -include $(DEPS)
  
 MKDIR_P ?= mkdir -p
