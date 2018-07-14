@@ -3,6 +3,7 @@ C-style Read Evalute Print Line
 
 ## build
 ```
+sudo apt install libedit-dev
 make
 ```
 

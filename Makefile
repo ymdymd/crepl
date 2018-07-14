@@ -24,7 +24,7 @@ CFLAGS	?= -Wall
 
 CXX := clang++
 CXXFLAGS ?=  -Wall -std=c++14
-LDFLAGS +=   -lstdc++
+LDFLAGS +=   -lstdc++  -ledit -ltermcap 
 
 
 ifeq ($(BUILD_TYPE),Debug)
