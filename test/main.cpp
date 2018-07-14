@@ -241,10 +241,11 @@ TEST(eval, expression2)
 int Reg[16];
 int& getReg(const std::string& symbol, void* _this) {
 	std::smatch m;
-	int idx;
+	int idx=-1;
 	if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
 		idx = std::stoul(m[1], nullptr, 10);
 	}
+	assert(idx>=0);
 
 	return Reg[idx % (sizeof(Reg) * sizeof(Reg[0]))];
 
@@ -267,10 +268,11 @@ public:
 	int reg[16];
 	int& getReg(const std::string& name) {
 		std::smatch m;
-		int idx;
+		int idx=-1;
 		if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
 			idx = std::stoul(m[1], nullptr, 10);
 		}
+		assert(idx>=0);
 		return reg[idx % (sizeof(reg) * sizeof(reg[0]))];
 	}
 };
@@ -278,10 +280,11 @@ public:
 static
 int& __read_reg(const std::string& name, void* _this) {
 	std::smatch m;
-	int idx;
+	int idx=-1;
 	if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
 		idx = std::stoul(m[1], nullptr, 10);
 	}
+	assert(idx>=0);
 	return static_cast <Foo*>(_this)->reg[idx % 16];
 }
 
