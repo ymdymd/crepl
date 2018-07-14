@@ -243,3 +243,6 @@ ModelManifest.xml
 
 # build
 build/
+
+# target executable
+crepl

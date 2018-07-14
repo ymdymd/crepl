@@ -36,7 +36,7 @@ CXXFLAGS	+= -O3
 endif
 
 
-$(BUILD_DIR)/$(TARGET): $(OBJS)
+$(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
  
 # assembly
@@ -58,7 +58,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 .PHONY: clean
  
 clean:
-	$(RM) -r $(BUILD_DIR)
+	$(RM) -r $(TARGET) $(BUILD_DIR)
 
 .PHONY: run
  

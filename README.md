@@ -11,3 +11,9 @@ make
 ./crepl
 ```
 
+## unittest(gtest)
+```
+cd test
+make
+./test
+```
