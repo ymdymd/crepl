@@ -49,7 +49,9 @@ namespace expr {
 enum Type {
     INVALID = -1, // invalid token
     EOL = 0,      // End Of Line must be 0.
-    IMM,          //	  integer_expression
+    IMM,          //	integer_expression
+    IMMX,         //	integer_expression(0x)
+    IMMB,         //	integer_expression(0b)
     VAR,          //    variable_expression
     REG,          //	  register_variable_expression
     PARL,         // (  parenthesis_expression

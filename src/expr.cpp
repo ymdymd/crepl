@@ -38,7 +38,8 @@ std::list<Token> lexer(const std::string &line) {
     auto ite = line.cend();
 
     std::vector<Token> keywords = {
-        {IMM, R"(^0x[0-9a-fA-F]+)"},
+        {IMMX, R"(^0[xX][0-9a-fA-F]+)"},
+        {IMMB, R"(^0[bB][0-1]+)"},
         {IMM, R"(^[0-9]+)"},
         {VAR, R"(^[a-zA-Z][a-zA-Z0-9]*)"},
         {REG, R"(^\%[a-zA-Z][0-9]+)"},
@@ -624,8 +625,15 @@ integer_expression (terminate)
 */
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token> &tokens) {
     FUNCTION_CALL_TRACE();
-    assert(tokens.front().type == IMM);
-    int value = (int)std::stoll(tokens.front().str, nullptr, 0);
+    int value =0;
+    if(tokens.front().type == IMM)
+        value = (int)std::stoi(tokens.front().str, nullptr, 0);
+    else if(tokens.front().type == IMMX)
+        value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 16);
+    else if(tokens.front().type == IMMB)
+        value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 2);
+    else 
+        assert( 0 && "illigal token type");
     auto Result = std::make_unique<IntegerExprAST>(value);
     tokens.pop_front(); // consume the number
     return std::move(Result);
@@ -655,6 +663,8 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> &tokens) {
         Error("unknown token when expecting an expression");
         return nullptr;
     case IMM:
+    case IMMX:
+    case IMMB:
         return integer_expression(tokens);
     case VAR:
     case REG:
