@@ -57,7 +57,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
  
 .PHONY: clean
 clean:
-	$(RM) -r $(TARGET) $(BUILD_DIR)
+	$(RM) -r $(TARGET) $(BUILD_DIR) .history
 
 .PHONY: run
 run: $(TARGET)

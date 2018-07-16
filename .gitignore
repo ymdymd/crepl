@@ -246,3 +246,4 @@ build/
 
 # target executable
 crepl
+.history

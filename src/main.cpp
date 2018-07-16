@@ -31,33 +31,76 @@ static int &get_symbol_val(const std::string &name, void *_this) {
     return (*static_cast<std::map<std::string, int> *>(_this))[name];
 }
 
+//-----------------------------------------------------------------------------
+static void version(void) {
+    // clang-format off
+    std::cout <<
+"crepl (C-style Read Evalute Print Line) ver.0.0\n";
+    // clang-format on
+}
+
+//-----------------------------------------------------------------------------
+static void help(void) {
+    version();
+    // clang-format off
+    std::cout <<
+"- Evalute equation\n"
+">> 1 + 2 + 3\n"
+"(0x00000006) 6\n"
+"- Assign variable\n"
+">> a = 1 + 2\n"
+"(0x00000003) 3\n"
+"- Show variable\n"
+">> a\n"
+"(0x00000003) 3\n"
+"- Exit program\n"
+">> exit\n"
+"";
+    // clang-format on
+}
+
+//-----------------------------------------------------------------------------
+static void print(std::map<std::string, int> &symbol) {
+    for (auto itr = symbol.begin(); itr != symbol.end(); ++itr) {
+        std::cout << itr->first << " = " << itr->second << "\n";
+    }
+}
+
+static void eval(const std::string line, std::map<std::string, int> &symbol) {
+    try {
+        int val = expr::eval(line, get_symbol_val, &symbol);
+        std::cout << format_str("(0x%08x) %d\n", val, val);
+    } catch (const std::runtime_error &e) {
+        std::cout << e.what() << std::endl;
+    }
+}
+
 //=============================================================================
 // main
 int main(int argc, char **argv) {
+    version();
     std::map<std::string, int> symbol;
-#ifdef USE_EDITLINE
-    char *line;
-    using_history();
-    read_history(NULL); // [ToDo]historyファイルが無いときの動作の検証
-    while (1) {
-        line = readline(">> ");
-        if (*line == 0) { // dump all symbol & value
-            for (auto itr = symbol.begin(); itr != symbol.end(); ++itr) {
-                std::cout << itr->first << " = " << itr->second << "\n";
-            }
-        } else { // evalute expresion
-            add_history(line);
-            try {
-                int val = expr::eval(line, get_symbol_val, &symbol);
-                std::cout << format_str("(0x%08x) %d\n", val, val);
-            } catch (const std::runtime_error &e) {
-                std::cout << e.what() << std::endl;
-            }
-        }
 
-        free(line);
+#ifdef USE_EDITLINE
+    using_history();
+    read_history(".history"); // [ToDo]historyファイルが無いときの動作の検証
+    while (1) {
+        char *buf = readline(">> ");
+        std::string line(buf);
+        free(buf);
+        if (line.empty())
+            continue;
+        add_history(line.c_str());
+        if (line == "exit")
+            break;
+        if (line == "help")
+            help();
+        if (line == "print")
+            print(symbol);
+        else // evalute expresion
+            eval(line, symbol);
     }
-    write_history(NULL);
+    write_history(".history");
 #else
 
     std::string s;
