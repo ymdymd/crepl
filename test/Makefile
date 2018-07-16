@@ -75,7 +75,7 @@ clean:
 
 .PHONY: run
  
-run:
+run: $(TARGET)
 	./$(TARGET)
 
 .PHONY: format

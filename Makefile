@@ -56,19 +56,23 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
  
  
 .PHONY: clean
- 
 clean:
 	$(RM) -r $(TARGET) $(BUILD_DIR)
 
 .PHONY: run
- 
-run:
-	cd $(BUILD_DIR) && ./$(TARGET)
+run: $(TARGET)
+	./$(TARGET)
 
 .PHONY: format
- 
 format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
 	clang-format -i $^
+
+.PHONY: test
+test: FORCE
+	make -C test run
+
+.PHONY: FORCE
+FORCE:
 
 -include $(DEPS)
  
