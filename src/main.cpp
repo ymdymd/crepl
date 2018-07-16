@@ -11,8 +11,8 @@
 #define USE_EDITLINE
 
 #ifdef USE_EDITLINE
-#include <editline/readline.h>
 #include <editline/history.h>
+#include <editline/readline.h>
 #endif
 
 //-----------------------------------------------------------------------------
@@ -35,18 +35,17 @@ static int &get_symbol_val(const std::string &name, void *_this) {
 // main
 int main(int argc, char **argv) {
     std::map<std::string, int> symbol;
-#ifdef USE_EDITLINE   
-    char *line;   
+#ifdef USE_EDITLINE
+    char *line;
     using_history();
     read_history(NULL); // [ToDo]historyファイルが無いときの動作の検証
-    while(1) {
+    while (1) {
         line = readline(">> ");
-        if (*line==0) { // dump all symbol & value
+        if (*line == 0) { // dump all symbol & value
             for (auto itr = symbol.begin(); itr != symbol.end(); ++itr) {
                 std::cout << itr->first << " = " << itr->second << "\n";
             }
-        }
-        else{ // evalute expresion
+        } else { // evalute expresion
             add_history(line);
             try {
                 int val = expr::eval(line, get_symbol_val, &symbol);
@@ -55,10 +54,10 @@ int main(int argc, char **argv) {
                 std::cout << e.what() << std::endl;
             }
         }
-        
+
         free(line);
     }
-	write_history(NULL);
+    write_history(NULL);
 #else
 
     std::string s;

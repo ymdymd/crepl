@@ -625,15 +625,15 @@ integer_expression (terminate)
 */
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token> &tokens) {
     FUNCTION_CALL_TRACE();
-    int value =0;
-    if(tokens.front().type == IMM)
+    int value = 0;
+    if (tokens.front().type == IMM)
         value = (int)std::stoi(tokens.front().str, nullptr, 0);
-    else if(tokens.front().type == IMMX)
+    else if (tokens.front().type == IMMX)
         value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 16);
-    else if(tokens.front().type == IMMB)
+    else if (tokens.front().type == IMMB)
         value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 2);
-    else 
-        assert( 0 && "illigal token type");
+    else
+        assert(0 && "illigal token type");
     auto Result = std::make_unique<IntegerExprAST>(value);
     tokens.pop_front(); // consume the number
     return std::move(Result);
