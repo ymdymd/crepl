@@ -244,6 +244,9 @@ ModelManifest.xml
 # build
 build/
 
+# vscode settings 
+.vscode/
+
 # target executable
 crepl
 .history
