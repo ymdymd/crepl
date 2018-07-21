@@ -1,9 +1,18 @@
 # target
 # カレントディレクト名をターゲット名称にする。
 TARGET	?= $(notdir $(CURDIR))
- 
-# build type
-BUILD_TYPE ?= Debug 
+
+# switch coverage build
+#COV ?= 1 
+
+# switch debug build
+#DEBUG ?= 1 
+
+# force debgg flag at coverage mode
+ifdef COV
+DEBUG := 1
+endif
+
 
 # directory
 BUILD_DIR := ../build
@@ -39,14 +48,22 @@ CXXFLAGS ?=  -Wall -std=c++14
 LDFLAGS +=   -lstdc++ -lpthread
 
 
-ifeq ($(BUILD_TYPE),Debug)
-CFLAGS	+= -g -O0
-CXXFLAGS	+= -g -O0
+# debug 
+ifdef DEBUG
+CFLAGS	+= -g -O0 -DDEBUG
+CXXFLAGS	+= -g -O0 -DDEBUG
+# release 
 else
 CFLAGS	+= -O3
 CXXFLAGS	+= -O3
 endif
 
+# coverage 
+ifdef COV
+CFLAGS	+= --coverage
+CXXFLAGS	+= --coverage
+LDFLAGS +=   --coverage
+endif
 
 $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
@@ -69,17 +86,14 @@ $(TARGET): $(OBJS)
 
 
 .PHONY: clean
- 
 clean:
-	$(RM) -r $(OBJS) $(DEPS) $(TARGET)
+	$(RM) -r $(OBJS) $(DEPS) $(TARGET) *.gcov *.gcno *.gcda
 
 .PHONY: run
- 
 run: $(TARGET)
 	./$(TARGET)
 
 .PHONY: format
- 
 format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
 	clang-format -i $^
 
