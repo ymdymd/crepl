@@ -2,8 +2,8 @@
 # カレントディレクト名をターゲット名称にする。
 TARGET	?= $(notdir $(CURDIR))
  
-# build type
-BUILD_TYPE ?= Debug 
+# debug build type
+# DEBUG ?=1
 
 # directory
 BUILD_DIR ?= ./build
@@ -27,9 +27,9 @@ CXXFLAGS ?=  -Wall -Wextra -std=c++14
 LDFLAGS +=   -lstdc++  -ledit -ltermcap 
 
 
-ifeq ($(BUILD_TYPE),Debug)
-CFLAGS	+= -g -O0
-CXXFLAGS	+= -g -O0
+ifdef DEBUG
+CFLAGS	+= -g -O0 -DDEBUG
+CXXFLAGS	+= -g -O0 -DDEBUG
 else
 CFLAGS	+= -O3
 CXXFLAGS	+= -O3
