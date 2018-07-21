@@ -1,4 +1,4 @@
-﻿#include <stdio.h>
+﻿#include "macro.h"
 #include "expr.h"
 #include <assert.h>
 #include <iostream>
@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <regex>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string>
 
@@ -130,6 +131,8 @@ class IntegerExprAST : public ExprAST {
     IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
     virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
                      void *_this = nullptr) {
+        UNUSED(fp);
+        UNUSED(_this);
         return Val;
     }
 };

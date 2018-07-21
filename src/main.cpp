@@ -1,4 +1,5 @@
 #include "expr.h"
+#include "macro.h"
 #include <iostream>
 #include <list>
 #include <map>
@@ -78,6 +79,8 @@ static void eval(const std::string line, std::map<std::string, int> &symbol) {
 //=============================================================================
 // main
 int main(int argc, char **argv) {
+    UNUSED(argc);
+    UNUSED(argv);
     version();
     std::map<std::string, int> symbol;
 

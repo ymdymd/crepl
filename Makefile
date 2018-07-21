@@ -20,10 +20,10 @@ CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
 
 CC := clang 
-CFLAGS	?= -Wall
+CFLAGS	?= -Wall -Wextra
 
 CXX := clang++
-CXXFLAGS ?=  -Wall -std=c++14
+CXXFLAGS ?=  -Wall -Wextra -std=c++14
 LDFLAGS +=   -lstdc++  -ledit -ltermcap 
 
 
