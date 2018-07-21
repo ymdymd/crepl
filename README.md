@@ -53,7 +53,7 @@ make
 
 ## unittest(gtest)
 ```
-cd test
-make
-./test
+git submodule init
+git submodule update
+make test
 ```
