@@ -36,7 +36,9 @@ static int &get_symbol_val(const std::string &name, void *_this) {
 static void version(void) {
     // clang-format off
     std::cout <<
-"crepl (C-style Read Evalute Print Line) ver.0.0\n";
+"crepl (C-style Read Evalute Print Line) ver.0.0\n"
+"(:q to quit, :? to help)\n"
+;
     // clang-format on
 }
 
@@ -46,16 +48,18 @@ static void help(void) {
     // clang-format off
     std::cout <<
 "- Evalute equation\n"
-">> 1 + 2 + 3\n"
+"> 1 + 2 + 3\n"
 "(0x00000006) 6\n"
 "- Assign variable\n"
-">> a = 1 + 2\n"
+"> a = 1 + 2\n"
 "(0x00000003) 3\n"
 "- Show variable\n"
-">> a\n"
+"> a\n"
 "(0x00000003) 3\n"
 "- Exit program\n"
-">> exit\n"
+"> :q\n"
+"- print all variable\n"
+"> :p\n"
 "";
     // clang-format on
 }
@@ -86,24 +90,24 @@ int main(int argc, char **argv) {
 
 #ifdef USE_EDITLINE
     using_history();
-    read_history(".history"); // [ToDo]historyファイルが無いときの動作の検証
+    // read_history(".history"); // [ToDo]historyファイルが無いときの動作の検証
     while (1) {
-        char *buf = readline(">> ");
+        char *buf = readline("> ");
         std::string line(buf);
         free(buf);
         if (line.empty())
             continue;
         add_history(line.c_str());
-        if (line == "exit")
+        if (line == ":q")
             break;
-        if (line == "help")
+        if (line == ":?")
             help();
-        if (line == "print")
+        if (line == ":p")
             print(symbol);
         else // evalute expresion
             eval(line, symbol);
     }
-    write_history(".history");
+    // write_history(".history");
 #else
 
     std::string s;
