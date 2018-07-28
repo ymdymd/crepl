@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         else // evalute expresion
             eval(line, symbol);
     }
-    // write_history(".history");
+// write_history(".history");
 #else
 
     std::string s;

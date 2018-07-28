@@ -24,7 +24,7 @@ namespace expr {
 // error
 static void Error(const std::string &msg) {
     throw expr_error(msg);
-    std::cerr << msg;
+    // std::cerr << msg;
 }
 
 //=============================================================================
@@ -107,11 +107,12 @@ std::list<Token> lexer(const std::string &line) {
         } else { //見つからなかった場合は、残りをすべてtokensに入れる
 #if 1
             Error("invalid token");
-#endif
+#else
             token.str = std::string(itr, ite);
             token.type = INVALID;
             tokens.push_back(token);
             break;
+#endif
         }
     }
 
