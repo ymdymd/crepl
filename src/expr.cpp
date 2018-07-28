@@ -547,6 +547,7 @@ binary_expression(std::list<Token> &tokens, std::unique_ptr<ExprAST> lhs) {
 
 /*-----------------------------------------------------------------------------
 conditional_expression
+FIXME '1 ? 2 : 0 ? 3 : 4' return 3 (expectd 2)
 */
 static std::unique_ptr<ExprAST>
 conditional_expression(std::list<Token> &tokens,
@@ -562,7 +563,8 @@ conditional_expression(std::list<Token> &tokens,
     }
 
     tokens.pop_front(); // eat ?
-    auto lhs = binary_expression(tokens, nullptr);
+    // auto lhs = binary_expression(tokens, nullptr);
+    auto lhs = conditional_expression(tokens, nullptr);
     if (!lhs)
         return nullptr;
 
@@ -691,14 +693,23 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> &tokens) {
 
 //=============================================================================
 std::unique_ptr<ExprAST> parser(std::list<Token> &tokens) {
-    return expression(tokens);
+    auto V = expression(tokens);
+    if(tokens.front().type == EOL)
+        return V; 
+ 
+    if (tokens.front().type == PARR)
+        Error("expected '('");
+    else
+        Error("unknown token when expecting an expression '"+tokens.front().str+"'");
+    //unreachable
+    return nullptr; 
 }
 
 //=============================================================================
 // evalute expr_str
 std::unique_ptr<ExprAST> parser(const std::string &expr_str) {
     auto tokens = lexer(expr_str);
-    return expression(tokens);
+    return parser(tokens);
 }
 
 //=============================================================================

@@ -127,8 +127,18 @@ TEST(eval, unary_expression)
 //-----------------------------------------------------------------------------
 TEST(eval, conditional_expression)
 {
-	TEST_EVAL(3 ? 2 : 1);
-	TEST_EVAL(0 ? 1 : 2);
+	TEST_EVAL(0 ? 2 : 3);
+	TEST_EVAL(1 ? 2 : 3);
+	TEST_EVAL(0 ? 0 ? 2 : 3 : 4);
+	TEST_EVAL(0 ? 0 ? 2 : 3 : 4);
+	TEST_EVAL(0 ? 1 ? 2 : 3 : 4);
+	TEST_EVAL(1 ? 0 ? 2 : 3 : 4);
+	TEST_EVAL(1 ? 1 ? 2 : 3 : 4);
+	// FIXME
+	// TEST_EVAL(0 ? 2 : 0 ? 3 : 4);
+	// TEST_EVAL(0 ? 2 : 1 ? 3 : 4);
+	// TEST_EVAL(1 ? 2 : 0 ? 3 : 4);
+	// TEST_EVAL(1 ? 2 : 1 ? 3 : 4);
 }
 
 //-----------------------------------------------------------------------------
@@ -149,7 +159,13 @@ TEST(eval, expression)
 	TEST_EVAL(1 + 2 ? 3 + 4 : 5 + 6);
 	TEST_EVAL(1 + 2 ? 3 + 4 ? 5 + 6 : 7 + 8 : 9);
 	TEST_EVAL(123 + 456 * 789 + 3 >= 8912 + 3 * 2 ? 3 + 554 * 0 - 1 : 650);
+}
 
+//-----------------------------------------------------------------------------
+#define TEST_INVALID_SYNTAX(expr_str) ASSERT_ANY_THROW( {expr::eval(expr_str);} )
+	TEST(eval, invalid_syntax) {
+	TEST_INVALID_SYNTAX("((1+1)");
+	TEST_INVALID_SYNTAX("(1+1))");
 }
 
 
@@ -310,7 +326,8 @@ TEST(eval, this_pointer)
 #if 1
 int main(int argc, char** argv)
 {
-#ifdef _DEBUG
+// #ifdef _DEBUG
+#if 1
 	//--gtest_break_on_failure
 	testing::GTEST_FLAG(break_on_failure) = true;
 #endif
