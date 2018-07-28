@@ -1,5 +1,5 @@
 # CREPL
-C-style Read Evalute Print Line
+C-flavor Read Evalute Print Line
 
 ## build
 ```
