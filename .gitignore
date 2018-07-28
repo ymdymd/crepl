@@ -250,3 +250,6 @@ build/
 # target executable
 crepl
 .history
+
+# coverage report
+coverage

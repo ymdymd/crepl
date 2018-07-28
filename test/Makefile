@@ -3,7 +3,7 @@
 TARGET	?= $(notdir $(CURDIR))
 
 # switch coverage build
-#COV ?= 1 
+COV ?= 1 
 
 # switch debug build
 #DEBUG ?= 1 
@@ -18,7 +18,7 @@ endif
 BUILD_DIR := ../build
 SRC_DIR := ../src
 GTEST_DIR := ../googletest/googletest
-
+COV_DIR := ./coverage
 
 SRCS := $(SRC_DIR)/expr.cpp
 SRCS += $(GTEST_DIR)/src/gtest-all.cc
@@ -87,7 +87,7 @@ $(TARGET): $(OBJS)
 
 .PHONY: clean
 clean:
-	$(RM) -r $(OBJS) $(DEPS) $(TARGET) *.gcov *.gcno *.gcda
+	$(RM) -r $(OBJS) $(DEPS) $(TARGET) *.gcov *.gcno *.gcda $(COV_DIR)
 
 .PHONY: run
 run: $(TARGET)
@@ -96,6 +96,11 @@ run: $(TARGET)
 .PHONY: format
 format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
 	clang-format -i $^
+
+.PHONY: cov
+cov: run
+	$(MKDIR_P) $(COV_DIR)
+	gcovr --gcov-executable="llvm-cov gcov" --filter $(SRC_DIR) -r .  --html --html-details -o $(COV_DIR)/index.html
 
 .PHONY: debug
 debug:
