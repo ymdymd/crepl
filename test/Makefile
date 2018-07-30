@@ -47,6 +47,9 @@ CXX := clang++
 CXXFLAGS ?=  -Wall -std=c++14
 LDFLAGS +=   -lstdc++ -lpthread
 
+GCOVFLAGS :=
+GCOVFLAGS += --print-summary
+#GCOVFLAGS += --exclude-unreachable-branches	#bug??
 
 # debug 
 ifdef DEBUG
@@ -100,7 +103,7 @@ format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -na
 .PHONY: cov
 cov: run
 	$(MKDIR_P) $(COV_DIR)
-	gcovr --gcov-executable="llvm-cov gcov" --filter $(SRC_DIR) -r .  --html --html-details -o $(COV_DIR)/index.html
+	gcovr --gcov-executable="llvm-cov gcov" -r . --filter $(SRC_DIR)  $(GCOVFLAGS) --html --html-details -o $(COV_DIR)/index.html
 
 .PHONY: debug
 debug:
