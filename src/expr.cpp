@@ -256,12 +256,12 @@ class AssignExprAST : public ExprAST {
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
                      void *_this = nullptr) {
+
+        if (lhs->type != VAR)
+            throw expr_error("cannot assign to except for variables");
         if (!fp)
             return 0;
-
-        if (lhs->type != VAR) {
-            throw expr_error("cannot assign to except for variables");
-        }
+        
         VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(lhs.get());
         int &lhs_ref = fp(lhs_ast->Name, _this);
         switch (type) {
@@ -683,7 +683,7 @@ std::unique_ptr<ExprAST> parser(std::list<Token> &tokens) {
     if (tokens.front().type == PARR)
         throw expr_error("expected '('");
     else
-        throw expr_error("unknown token when expecting an expression '" +
+        throw expr_error("unknown token when expecting an operator '" +
                          tokens.front().str + "'");
     // unreachable
     return nullptr;
