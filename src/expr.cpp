@@ -21,13 +21,6 @@ namespace expr {
 #define FUNCTION_CALL_TRACE(msg)
 #endif
 
-//-----------------------------------------------------------------------------
-// error
-static void Error(const std::string &msg) {
-    throw expr_error(msg);
-    // std::cerr << msg;
-}
-
 //=============================================================================
 // lexer
 
@@ -107,7 +100,7 @@ std::list<Token> lexer(const std::string &line) {
             tokens.push_back(token);
         } else { //見つからなかった場合は、残りをすべてtokensに入れる
 #if 1
-            Error("invalid token");
+            throw expr_error("invalid token");
 #else
             token.str = std::string(itr, ite);
             token.type = INVALID;
@@ -172,7 +165,7 @@ class UnaryExprAST : public ExprAST {
         case (NOT):
             return !rhs->eval(fp, _this);
         default:
-            Error("unknown operator");
+            throw expr_error("unknown operator");
         }
         return 0;
     }
@@ -228,7 +221,7 @@ class BinaryExprAST : public ExprAST {
         case (GE):
             return lhs->eval(fp, _this) >= rhs->eval(fp, _this);
         default:
-            Error("unknown operator");
+            throw expr_error("unknown operator");
         }
         return 0;
     }
@@ -267,7 +260,7 @@ class AssignExprAST : public ExprAST {
             return 0;
 
         if (lhs->type != VAR) {
-            Error("cannot assign to except for variables");
+            throw expr_error("cannot assign to except for variables");
         }
         VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(lhs.get());
         int &lhs_ref = fp(lhs_ast->Name, _this);
@@ -295,7 +288,7 @@ class AssignExprAST : public ExprAST {
         case (ASSIGN_MOD):
             return lhs_ref %= rhs->eval(fp, _this);
         default:
-            Error("unknown operator");
+            throw expr_error("unknown operator");
         }
         return 0;
     }
@@ -578,8 +571,7 @@ conditional_expression(std::list<Token> &tokens,
             tokens, std::make_unique<ConditionalExprAST>(
                         std::move(cond), std::move(lhs), std::move(rhs)));
     } else {
-        Error("expected ':'\n");
-        return nullptr;
+        throw expr_error("expected ':'\n");
     }
     return lhs;
 }
@@ -660,8 +652,7 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> &tokens) {
     FUNCTION_CALL_TRACE(tokens.front().str);
     switch (tokens.front().type) {
     default:
-        Error("unknown token when expecting an expression");
-        return nullptr;
+        throw expr_error("unknown token when expecting an expression");
     case IMM:
     case IMMX:
     case IMMB:
@@ -675,8 +666,7 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> &tokens) {
         assert(V);
         //副次式を解析した後、”)”の出現がない可能性がある。
         if (tokens.front().type != PARR) {
-            Error("expected ')'");
-            return nullptr;
+            throw expr_error("expected ')'");
         }
         tokens.pop_front(); // eat ).
         return V;
@@ -691,10 +681,10 @@ std::unique_ptr<ExprAST> parser(std::list<Token> &tokens) {
         return V;
 
     if (tokens.front().type == PARR)
-        Error("expected '('");
+        throw expr_error("expected '('");
     else
-        Error("unknown token when expecting an expression '" +
-              tokens.front().str + "'");
+        throw expr_error("unknown token when expecting an expression '" +
+                         tokens.front().str + "'");
     // unreachable
     return nullptr;
 }
