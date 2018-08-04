@@ -134,11 +134,10 @@ TEST(eval, conditional_expression)
 	TEST_EVAL(0 ? 1 ? 2 : 3 : 4);
 	TEST_EVAL(1 ? 0 ? 2 : 3 : 4);
 	TEST_EVAL(1 ? 1 ? 2 : 3 : 4);
-	// FIXME
-	// TEST_EVAL(0 ? 2 : 0 ? 3 : 4);
-	// TEST_EVAL(0 ? 2 : 1 ? 3 : 4);
-	// TEST_EVAL(1 ? 2 : 0 ? 3 : 4);
-	// TEST_EVAL(1 ? 2 : 1 ? 3 : 4);
+	TEST_EVAL(0 ? 2 : 0 ? 3 : 4);
+	TEST_EVAL(0 ? 2 : 1 ? 3 : 4);
+	TEST_EVAL(1 ? 2 : 0 ? 3 : 4);
+	TEST_EVAL(1 ? 2 : 1 ? 3 : 4);
 }
 
 //-----------------------------------------------------------------------------
