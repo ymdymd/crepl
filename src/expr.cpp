@@ -621,9 +621,9 @@ static std::unique_ptr<ExprAST> integer_expression(std::list<Token> &tokens) {
     if (tokens.front().type == IMM)
         value = (int)std::stoi(tokens.front().str, nullptr, 0);
     else if (tokens.front().type == IMMX)
-        value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 16);
+        value = (int)std::stoul(tokens.front().str.substr(2), nullptr, 16);
     else if (tokens.front().type == IMMB)
-        value = (int)std::stoi(tokens.front().str.substr(2), nullptr, 2);
+        value = (int)std::stoul(tokens.front().str.substr(2), nullptr, 2);
     else
         assert(0 && "illigal token type");
     auto Result = std::make_unique<IntegerExprAST>(value);
