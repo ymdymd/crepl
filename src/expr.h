@@ -117,7 +117,7 @@ struct Token {
 class ExprAST {
   public:
     const Type type; // node type
-    ExprAST(const Type _type) : type(_type) {}
+    explicit ExprAST(const Type _type) : type(_type) {}
     virtual ~ExprAST() {}
     virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
                      void *_this = nullptr) = 0;

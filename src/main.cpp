@@ -95,17 +95,21 @@ int main(int argc, char **argv) {
         char *buf = readline("> ");
         std::string line(buf);
         free(buf);
-        if (line.empty())
+        if (line.empty()) {
             continue;
+        }
         add_history(line.c_str());
-        if (line == ":q")
+        if (line == ":q") {
             break;
-        if (line == ":?")
+        }
+        if (line == ":?") {
             help();
-        if (line == ":p")
+        }
+        if (line == ":p") {
             print(symbol);
-        else // evalute expresion
+        } else { // evalute expresion
             eval(line, symbol);
+        }
     }
 // write_history(".history");
 #else
