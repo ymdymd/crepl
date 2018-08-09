@@ -109,7 +109,7 @@ struct Token {
     Type type;       // token type
     std::string str; // token string
     Token(void) : type(EOL), str(""){};
-    Token(Type _type, std::string _str) : type(_type), str(_str){};
+    Token(Type _type, std::string _str) : type(_type), str(std::move(_str)){};
 };
 
 //-----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ class ExprAST {
   public:
     const Type type; // node type
     explicit ExprAST(const Type _type) : type(_type) {}
-    virtual ~ExprAST() {}
+    virtual ~ExprAST() = default;
     virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
                      void *_this = nullptr) = 0;
 };

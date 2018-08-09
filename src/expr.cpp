@@ -124,8 +124,8 @@ class IntegerExprAST : public ExprAST {
   public:
     const int Val;
     explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
         UNUSED(fp);
         UNUSED(_this);
         return Val;
@@ -138,10 +138,10 @@ class IntegerExprAST : public ExprAST {
 class VariableExprAST : public ExprAST {
   public:
     const std::string Name;
-    explicit VariableExprAST(const std::string &Name)
-        : ExprAST(VAR), Name(Name) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    explicit VariableExprAST(std::string Name)
+        : ExprAST(VAR), Name(std::move(Name)) {}
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
         return fp ? fp(Name, _this) : 0;
     }
 };
@@ -154,8 +154,8 @@ class UnaryExprAST : public ExprAST {
   public:
     UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), rhs(std::move(rhs)) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
         switch (type) {
         case (ADD):
             return +rhs->eval(fp, _this);
@@ -182,8 +182,8 @@ class BinaryExprAST : public ExprAST {
     BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
         switch (type) {
         case (ADD):
             return lhs->eval(fp, _this) + rhs->eval(fp, _this);
@@ -239,8 +239,8 @@ class ConditionalExprAST : public ExprAST {
                        std::unique_ptr<ExprAST> rhs)
         : ExprAST(QUESTION), cond(std::move(cond)), lhs(std::move(lhs)),
           rhs(std::move(rhs)) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
         return cond->eval(fp, _this) ? lhs->eval(fp, _this)
                                      : rhs->eval(fp, _this);
     }
@@ -255,8 +255,8 @@ class AssignExprAST : public ExprAST {
     AssignExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) {
+    int eval(int &(*fp)(const std::string &, void *) = nullptr,
+             void *_this = nullptr) override {
 
         if (lhs->type != VAR) {
             throw expr_error("cannot assign to except for variables");

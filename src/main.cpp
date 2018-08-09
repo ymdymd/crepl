@@ -18,6 +18,7 @@
 
 //-----------------------------------------------------------------------------
 #include <cstdarg>
+#include <utility>
 static std::string format_str(const char *fmt, ...) {
     static char buf[2048];
     va_list args;
@@ -33,7 +34,7 @@ static int &get_symbol_val(const std::string &name, void *_this) {
 }
 
 //-----------------------------------------------------------------------------
-static void version(void) {
+static void version() {
     // clang-format off
     std::cout <<
 "crepl (C-style Read Evalute Print Line) ver.0.0\n"
@@ -43,7 +44,7 @@ static void version(void) {
 }
 
 //-----------------------------------------------------------------------------
-static void help(void) {
+static void help() {
     version();
     // clang-format off
     std::cout <<
@@ -66,8 +67,8 @@ static void help(void) {
 
 //-----------------------------------------------------------------------------
 static void print(std::map<std::string, int> &symbol) {
-    for (auto itr = symbol.begin(); itr != symbol.end(); ++itr) {
-        std::cout << itr->first << " = " << itr->second << "\n";
+    for (auto &itr : symbol) {
+        std::cout << itr.first << " = " << itr.second << "\n";
     }
 }
 

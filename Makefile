@@ -35,8 +35,9 @@ CFLAGS	+= -O3
 CXXFLAGS	+= -O3
 endif
 
-TIDYFLAGS := -fix -fix-errors -header-filter=.* 
-TIDYFLAGS += --checks=-*,google-*
+#TIDYFLAGS := -fix -fix-errors -header-filter=.* 
+TIDYFLAGS := -fix -header-filter=.* 
+TIDYFLAGS += --checks=-*,google-*,modernize-*
 #TIDYFLAGS += --checks=-*,readability-*
 #TIDYFLAGS += --checks=-*,clang-analyzer-*,-clang-analyzer-cplusplus*,cert-*,readability-*
 #TIDYFLAGS += --checks=readability-braces-around-statements
@@ -78,7 +79,7 @@ format:	tidy
 
 .PHONY: test
 test: FORCE
-	make -C test run
+	make -C test clean run
 
 .PHONY: FORCE
 FORCE:
