@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <functional>
 
 //-----------------------------------------------------------------------------
 /*
@@ -119,8 +120,7 @@ class ExprAST {
     const Type type; // node type
     explicit ExprAST(const Type _type) : type(_type) {}
     virtual ~ExprAST() = default;
-    virtual int eval(int &(*fp)(const std::string &, void *) = nullptr,
-                     void *_this = nullptr) = 0;
+    virtual int eval(std::function<int&(const std::string &)> fp = nullptr) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -145,7 +145,6 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str);
 //-----------------------------------------------------------------------------
 // evalute expr_str
 int eval(const std::string expr_str,
-         int &(*fp)(const std::string &, void *) = nullptr,
-         void *_this = nullptr);
+        std::function<int&(const std::string &)> fp = nullptr);
 
 } // namespace expr

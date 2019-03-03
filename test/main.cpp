@@ -164,7 +164,7 @@ TEST(eval, invalid_syntax) {
 //-----------------------------------------------------------------------------
 int a, b, c, d, e, f, g = 0;
 int _a, _b, _c, _d, _e, _f, _g = 0;
-int &getVar(const std::string &symbol, void *_this) {
+int &getVar(const std::string &symbol) {
   if (symbol == "a")
     return _a;
   if (symbol == "b")
@@ -247,21 +247,20 @@ TEST(eval, expression2) {
   TEST_VAR(g = (a + b) * (c + d) * (e + f));
 }
 
-//-----------------------------------------------------------------------------
-int Reg[16];
-int &getReg(const std::string &symbol, void *_this) {
-  std::smatch m;
-  int idx = -1;
-  if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
-    idx = std::stoul(m[1], nullptr, 10);
-  }
-  assert(idx >= 0);
-
-  return Reg[idx % (sizeof(Reg) * sizeof(Reg[0]))];
-}
 TEST(eval, reg) {
+  int Reg[16];
 
   auto myAST = expr::parser(R"(%r12>=100)");
+  auto getReg = [&] (const std::string &symbol) -> int&{ 
+    std::smatch m;
+    int idx = -1;
+    if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
+      idx = std::stoul(m[1], nullptr, 10);
+    }
+    assert(idx >= 0);
+
+    return Reg[idx % (sizeof(Reg) * sizeof(Reg[0]))];
+  };  
 
   Reg[12] = 128;
   ASSERT_EQ((int)(Reg[12] >= 100), myAST->eval(getReg));
@@ -284,25 +283,17 @@ public:
   }
 };
 
-static int &__read_reg(const std::string &name, void *_this) {
-  std::smatch m;
-  int idx = -1;
-  if (regex_search(name, m, std::regex(R"(\%[rR]([0-9]+))"))) {
-    idx = std::stoul(m[1], nullptr, 10);
-  }
-  assert(idx >= 0);
-  return static_cast<Foo *>(_this)->reg[idx % 16];
-}
-
 TEST(eval, this_pointer) {
 
   Foo foo;
-
+  auto getReg = [&] (const std::string &symbol) -> int&{ 
+    return foo.getReg(symbol);
+  };
   auto myAST = expr::parser(R"(%r12>=100)");
   foo.reg[12] = 128;
-  ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(__read_reg, &foo));
+  ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(getReg));
   foo.reg[12] = 99;
-  ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(__read_reg, &foo));
+  ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(getReg));
 }
 
 //=============================================================================

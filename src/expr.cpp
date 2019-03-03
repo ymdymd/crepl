@@ -124,12 +124,17 @@ class IntegerExprAST : public ExprAST {
   public:
     const int Val;
     explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
         UNUSED(fp);
-        UNUSED(_this);
         return Val;
     }
+   
+    // int eval(int &(*fp)(const std::string &, void *) = nullptr,
+    //          void *_this = nullptr) override {
+    //     UNUSED(fp);
+    //     UNUSED(_this);
+    //     return Val;
+    // }
 };
 
 //-----------------------------------------------------------------------------
@@ -140,10 +145,13 @@ class VariableExprAST : public ExprAST {
     const std::string Name;
     explicit VariableExprAST(std::string Name)
         : ExprAST(VAR), Name(std::move(Name)) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
-        return fp ? fp(Name, _this) : 0;
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
+        return fp ? fp(Name) : 0;
     }
+    // int eval(int &(*fp)(const std::string &, void *) = nullptr,
+    //          void *_this = nullptr) override {
+    //     return fp ? fp(Name, _this) : 0;
+    // }
 };
 
 //-----------------------------------------------------------------------------
@@ -154,17 +162,16 @@ class UnaryExprAST : public ExprAST {
   public:
     UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), rhs(std::move(rhs)) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
         switch (type) {
         case (ADD):
-            return +rhs->eval(fp, _this);
+            return +rhs->eval(fp);
         case (SUB):
-            return -rhs->eval(fp, _this);
+            return -rhs->eval(fp);
         case (INV):
-            return ~rhs->eval(fp, _this);
+            return ~rhs->eval(fp);
         case (NOT):
-            return !rhs->eval(fp, _this);
+            return !rhs->eval(fp);
         default:
             throw expr_error("unknown operator");
         }
@@ -182,50 +189,49 @@ class BinaryExprAST : public ExprAST {
     BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
         switch (type) {
         case (ADD):
-            return lhs->eval(fp, _this) + rhs->eval(fp, _this);
+            return lhs->eval(fp) + rhs->eval(fp);
         case (SUB):
-            return lhs->eval(fp, _this) - rhs->eval(fp, _this);
+            return lhs->eval(fp) - rhs->eval(fp);
         case (MUL):
-            return lhs->eval(fp, _this) * rhs->eval(fp, _this);
+            return lhs->eval(fp) * rhs->eval(fp);
         case (DIV):
-            return lhs->eval(fp, _this) / rhs->eval(fp, _this);
+            return lhs->eval(fp) / rhs->eval(fp);
         case (MOD):
-            return lhs->eval(fp, _this) % rhs->eval(fp, _this);
+            return lhs->eval(fp) % rhs->eval(fp);
         case (AND):
-            return lhs->eval(fp, _this) & rhs->eval(fp, _this);
+            return lhs->eval(fp) & rhs->eval(fp);
         case (OR):
-            return lhs->eval(fp, _this) | rhs->eval(fp, _this);
+            return lhs->eval(fp) | rhs->eval(fp);
         case (XOR):
-            return lhs->eval(fp, _this) ^ rhs->eval(fp, _this);
+            return lhs->eval(fp) ^ rhs->eval(fp);
         case (LAND):
-            return lhs->eval(fp, _this) && rhs->eval(fp, _this);
+            return lhs->eval(fp) && rhs->eval(fp);
         case (LOR):
-            return lhs->eval(fp, _this) || rhs->eval(fp, _this);
+            return lhs->eval(fp) || rhs->eval(fp);
         case (SFTL):
-            return lhs->eval(fp, _this) << rhs->eval(fp, _this);
+            return lhs->eval(fp) << rhs->eval(fp);
         case (SFTR):
-            return lhs->eval(fp, _this) >> rhs->eval(fp, _this);
+            return lhs->eval(fp) >> rhs->eval(fp);
         case (EQ):
-            return lhs->eval(fp, _this) == rhs->eval(fp, _this);
+            return lhs->eval(fp) == rhs->eval(fp);
         case (NE):
-            return lhs->eval(fp, _this) != rhs->eval(fp, _this);
+            return lhs->eval(fp) != rhs->eval(fp);
         case (LT):
-            return lhs->eval(fp, _this) < rhs->eval(fp, _this);
+            return lhs->eval(fp) < rhs->eval(fp);
         case (LE):
-            return lhs->eval(fp, _this) <= rhs->eval(fp, _this);
+            return lhs->eval(fp) <= rhs->eval(fp);
         case (GT):
-            return lhs->eval(fp, _this) > rhs->eval(fp, _this);
+            return lhs->eval(fp) > rhs->eval(fp);
         case (GE):
-            return lhs->eval(fp, _this) >= rhs->eval(fp, _this);
+            return lhs->eval(fp) >= rhs->eval(fp);
         default:
             throw expr_error("unknown operator");
         }
         return 0;
-    }
+    };
 };
 
 //-----------------------------------------------------------------------------
@@ -239,11 +245,9 @@ class ConditionalExprAST : public ExprAST {
                        std::unique_ptr<ExprAST> rhs)
         : ExprAST(QUESTION), cond(std::move(cond)), lhs(std::move(lhs)),
           rhs(std::move(rhs)) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
-        return cond->eval(fp, _this) ? lhs->eval(fp, _this)
-                                     : rhs->eval(fp, _this);
-    }
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
+        return cond->eval(fp) ? lhs->eval(fp) : rhs->eval(fp);
+    };
 };
 
 //-----------------------------------------------------------------------------
@@ -255,9 +259,7 @@ class AssignExprAST : public ExprAST {
     AssignExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    int eval(int &(*fp)(const std::string &, void *) = nullptr,
-             void *_this = nullptr) override {
-
+    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
         if (lhs->type != VAR) {
             throw expr_error("cannot assign to except for variables");
         }
@@ -266,35 +268,36 @@ class AssignExprAST : public ExprAST {
         }
 
         VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(lhs.get());
-        int &lhs_ref = fp(lhs_ast->Name, _this);
+        int &lhs_ref = fp(lhs_ast->Name);
         switch (type) {
         case (ASSIGN):
-            return lhs_ref = rhs->eval(fp, _this);
+            return lhs_ref = rhs->eval(fp);
         case (ASSIGN_OR):
-            return lhs_ref |= rhs->eval(fp, _this);
+            return lhs_ref |= rhs->eval(fp);
         case (ASSIGN_XOR):
-            return lhs_ref ^= rhs->eval(fp, _this);
+            return lhs_ref ^= rhs->eval(fp);
         case (ASSIGN_AND):
-            return lhs_ref &= rhs->eval(fp, _this);
+            return lhs_ref &= rhs->eval(fp);
         case (ASSIGN_SL):
-            return lhs_ref <<= rhs->eval(fp, _this);
+            return lhs_ref <<= rhs->eval(fp);
         case (ASSIGN_SR):
-            return lhs_ref >>= rhs->eval(fp, _this);
+            return lhs_ref >>= rhs->eval(fp);
         case (ASSIGN_ADD):
-            return lhs_ref += rhs->eval(fp, _this);
+            return lhs_ref += rhs->eval(fp);
         case (ASSIGN_SUB):
-            return lhs_ref -= rhs->eval(fp, _this);
+            return lhs_ref -= rhs->eval(fp);
         case (ASSIGN_MUL):
-            return lhs_ref *= rhs->eval(fp, _this);
+            return lhs_ref *= rhs->eval(fp);
         case (ASSIGN_DIV):
-            return lhs_ref /= rhs->eval(fp, _this);
+            return lhs_ref /= rhs->eval(fp);
         case (ASSIGN_MOD):
-            return lhs_ref %= rhs->eval(fp, _this);
+            return lhs_ref %= rhs->eval(fp);
         default:
             throw expr_error("unknown operator");
         }
         return 0;
-    }
+ 
+    };
 };
 
 //=============================================================================
@@ -754,9 +757,9 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str) {
 
 //=============================================================================
 // evalute expr_str
-int eval(const std::string expr_str, int &(*fp)(const std::string &, void *),
-         void *_this) {
-    return parser(expr_str)->eval(fp, _this);
+int eval(const std::string expr_str,
+        std::function<int&(const std::string &)> fp){
+    return parser(expr_str)->eval(fp);
 }
 
 } // namespace expr

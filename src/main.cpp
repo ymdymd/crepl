@@ -29,11 +29,6 @@ static std::string format_str(const char *fmt, ...) {
 }
 
 //-----------------------------------------------------------------------------
-static int &get_symbol_val(const std::string &name, void *_this) {
-    return (*static_cast<std::map<std::string, int> *>(_this))[name];
-}
-
-//-----------------------------------------------------------------------------
 static void version() {
     // clang-format off
     std::cout <<
@@ -66,15 +61,19 @@ static void help() {
 }
 
 //-----------------------------------------------------------------------------
-static void print(std::map<std::string, int> &symbol) {
-    for (auto &itr : symbol) {
+static void print(std::map<std::string, int> &symbols) {
+    for (auto &itr : symbols) {
         std::cout << itr.first << " = " << itr.second << "\n";
     }
 }
 
-static void eval(const std::string line, std::map<std::string, int> &symbol) {
+static void eval(const std::string line, std::map<std::string, int> &symbols) {
+    auto get_symbol_ref = [&] (const std::string &symbol) -> int&{ 
+        return symbols[symbol];
+    };
+  
     try {
-        int val = expr::eval(line, get_symbol_val, &symbol);
+        int val = expr::eval(line, get_symbol_ref);
         std::cout << format_str("(0x%08x) %d\n", val, val);
     } catch (const std::runtime_error &e) {
         std::cout << e.what() << std::endl;
@@ -87,7 +86,7 @@ int main(int argc, char **argv) {
     UNUSED(argc);
     UNUSED(argv);
     version();
-    std::map<std::string, int> symbol;
+    std::map<std::string, int> symbols;
 
 #ifdef USE_EDITLINE
     using_history();
@@ -107,9 +106,9 @@ int main(int argc, char **argv) {
             help();
         }
         if (line == ":p") {
-            print(symbol);
+            print(symbols);
         } else { // evalute expresion
-            eval(line, symbol);
+            eval(line, symbols);
         }
     }
 // write_history(".history");
@@ -118,12 +117,12 @@ int main(int argc, char **argv) {
     std::string s;
     do {
         if (s.empty()) { // dump all symbol & value
-            for (auto itr = symbol.begin(); itr != symbol.end(); ++itr) {
+            for (auto itr = symbols.begin(); itr != symbols.end(); ++itr) {
                 std::cout << itr->first << " = " << itr->second << "\n";
             }
         } else { // evalute expresion
             try {
-                int val = expr::eval(s, get_symbol_val, &symbol);
+                int val = expr::eval(s, get_symbol_ref);
                 std::cout << format_str("(0x%08x) %d\n", val, val);
             } catch (const std::runtime_error &e) {
                 std::cout << e.what() << std::endl;
