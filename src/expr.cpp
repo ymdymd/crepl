@@ -128,13 +128,6 @@ class IntegerExprAST : public ExprAST {
         UNUSED(fp);
         return Val;
     }
-   
-    // int eval(int &(*fp)(const std::string &, void *) = nullptr,
-    //          void *_this = nullptr) override {
-    //     UNUSED(fp);
-    //     UNUSED(_this);
-    //     return Val;
-    // }
 };
 
 //-----------------------------------------------------------------------------
@@ -148,10 +141,6 @@ class VariableExprAST : public ExprAST {
     int eval(std::function<int&(const std::string &)> fp = nullptr) override {
         return fp ? fp(Name) : 0;
     }
-    // int eval(int &(*fp)(const std::string &, void *) = nullptr,
-    //          void *_this = nullptr) override {
-    //     return fp ? fp(Name, _this) : 0;
-    // }
 };
 
 //-----------------------------------------------------------------------------
