@@ -3,7 +3,8 @@
 TARGET	?= $(notdir $(CURDIR))
 
 # switch coverage build
-COV ?= 1 
+#COV ?= 1 
+COV ?= 0 
 
 # switch debug build
 #DEBUG ?= 1 

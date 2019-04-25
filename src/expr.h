@@ -113,6 +113,11 @@ struct Token {
     Token(Type _type, std::string _str) : type(_type), str(std::move(_str)){};
 };
 
+
+//-----------------------------------------------------------------------------
+// Vistor
+class ExprVisitor;
+
 //-----------------------------------------------------------------------------
 // AST (Abstract Syntax Tree)
 class ExprAST {
@@ -120,7 +125,8 @@ class ExprAST {
     const Type type; // node type
     explicit ExprAST(const Type _type) : type(_type) {}
     virtual ~ExprAST() = default;
-    virtual int eval(std::function<int&(const std::string &)> fp = nullptr) = 0;
+    virtual void accept(ExprVisitor &) = 0;
+    int eval(std::function<int&(const std::string &)> fp = nullptr);
 };
 
 //-----------------------------------------------------------------------------

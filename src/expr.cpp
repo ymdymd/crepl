@@ -114,6 +114,30 @@ std::list<Token> lexer(const std::string &line) {
     return tokens;
 }
 
+
+// Forward declaration
+class IntegerExprAST;
+class VariableExprAST;
+class UnaryExprAST;
+class BinaryExprAST;
+class ConditionalExprAST;
+class AssignExprAST;
+
+//=============================================================================
+// Visitor
+class ExprVisitor {
+  public:
+  ExprVisitor() {}
+  virtual ~ExprVisitor() {}
+
+  virtual void visit(IntegerExprAST &) =0;
+  virtual void visit(VariableExprAST &) =0;
+  virtual void visit(UnaryExprAST &) =0;
+  virtual void visit(BinaryExprAST &) =0;
+  virtual void visit(ConditionalExprAST &) =0;
+  virtual void visit(AssignExprAST &) =0;
+};
+
 //=============================================================================
 // AST (Abstract Syntax Tree)
 //-----------------------------------------------------------------------------
@@ -124,10 +148,7 @@ class IntegerExprAST : public ExprAST {
   public:
     const int Val;
     explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        UNUSED(fp);
-        return Val;
-    }
+    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
 };
 
 //-----------------------------------------------------------------------------
@@ -138,95 +159,40 @@ class VariableExprAST : public ExprAST {
     const std::string Name;
     explicit VariableExprAST(std::string Name)
         : ExprAST(VAR), Name(std::move(Name)) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        return fp ? fp(Name) : 0;
-    }
+    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
 };
 
 //-----------------------------------------------------------------------------
 // UnaryExprAST - Expression class for a unary operator.
 class UnaryExprAST : public ExprAST {
+  public:
     std::unique_ptr<ExprAST> rhs;
 
   public:
     UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), rhs(std::move(rhs)) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        switch (type) {
-        case (ADD):
-            return +rhs->eval(fp);
-        case (SUB):
-            return -rhs->eval(fp);
-        case (INV):
-            return ~rhs->eval(fp);
-        case (NOT):
-            return !rhs->eval(fp);
-        default:
-            throw expr_error("unknown operator");
-        }
-        return 0;
-    }
+    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
 };
 
 //-----------------------------------------------------------------------------
 // BinaryExprAST - Expression class for a binary operator.
 // BinaryExprAST - 二項演算子のための式クラス。
 class BinaryExprAST : public ExprAST {
-    std::unique_ptr<ExprAST> lhs, rhs;
+  public:
+    const std::unique_ptr<ExprAST> lhs, rhs;
 
   public:
     BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        switch (type) {
-        case (ADD):
-            return lhs->eval(fp) + rhs->eval(fp);
-        case (SUB):
-            return lhs->eval(fp) - rhs->eval(fp);
-        case (MUL):
-            return lhs->eval(fp) * rhs->eval(fp);
-        case (DIV):
-            return lhs->eval(fp) / rhs->eval(fp);
-        case (MOD):
-            return lhs->eval(fp) % rhs->eval(fp);
-        case (AND):
-            return lhs->eval(fp) & rhs->eval(fp);
-        case (OR):
-            return lhs->eval(fp) | rhs->eval(fp);
-        case (XOR):
-            return lhs->eval(fp) ^ rhs->eval(fp);
-        case (LAND):
-            return lhs->eval(fp) && rhs->eval(fp);
-        case (LOR):
-            return lhs->eval(fp) || rhs->eval(fp);
-        case (SFTL):
-            return lhs->eval(fp) << rhs->eval(fp);
-        case (SFTR):
-            return lhs->eval(fp) >> rhs->eval(fp);
-        case (EQ):
-            return lhs->eval(fp) == rhs->eval(fp);
-        case (NE):
-            return lhs->eval(fp) != rhs->eval(fp);
-        case (LT):
-            return lhs->eval(fp) < rhs->eval(fp);
-        case (LE):
-            return lhs->eval(fp) <= rhs->eval(fp);
-        case (GT):
-            return lhs->eval(fp) > rhs->eval(fp);
-        case (GE):
-            return lhs->eval(fp) >= rhs->eval(fp);
-        default:
-            throw expr_error("unknown operator");
-        }
-        return 0;
-    };
+    virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // ConditionalExprAST - Expression class for a conditinal operator.
 class ConditionalExprAST : public ExprAST {
-    std::unique_ptr<ExprAST> cond, lhs, rhs;
+  public:
+    const std::unique_ptr<ExprAST> cond, lhs, rhs;
 
   public:
     ConditionalExprAST(std::unique_ptr<ExprAST> cond,
@@ -234,59 +200,20 @@ class ConditionalExprAST : public ExprAST {
                        std::unique_ptr<ExprAST> rhs)
         : ExprAST(QUESTION), cond(std::move(cond)), lhs(std::move(lhs)),
           rhs(std::move(rhs)) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        return cond->eval(fp) ? lhs->eval(fp) : rhs->eval(fp);
-    };
+    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
 };
 
 //-----------------------------------------------------------------------------
 // AssignExprAST
 class AssignExprAST : public ExprAST {
-    std::unique_ptr<ExprAST> lhs, rhs;
+  public:
+    const std::unique_ptr<ExprAST> lhs, rhs;
 
   public:
     AssignExprAST(Type type, std::unique_ptr<ExprAST> lhs,
                   std::unique_ptr<ExprAST> rhs)
         : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    int eval(std::function<int&(const std::string &)> fp = nullptr) override {
-        if (lhs->type != VAR) {
-            throw expr_error("cannot assign to except for variables");
-        }
-        if (!fp) {
-            return 0;
-        }
-
-        VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(lhs.get());
-        int &lhs_ref = fp(lhs_ast->Name);
-        switch (type) {
-        case (ASSIGN):
-            return lhs_ref = rhs->eval(fp);
-        case (ASSIGN_OR):
-            return lhs_ref |= rhs->eval(fp);
-        case (ASSIGN_XOR):
-            return lhs_ref ^= rhs->eval(fp);
-        case (ASSIGN_AND):
-            return lhs_ref &= rhs->eval(fp);
-        case (ASSIGN_SL):
-            return lhs_ref <<= rhs->eval(fp);
-        case (ASSIGN_SR):
-            return lhs_ref >>= rhs->eval(fp);
-        case (ASSIGN_ADD):
-            return lhs_ref += rhs->eval(fp);
-        case (ASSIGN_SUB):
-            return lhs_ref -= rhs->eval(fp);
-        case (ASSIGN_MUL):
-            return lhs_ref *= rhs->eval(fp);
-        case (ASSIGN_DIV):
-            return lhs_ref /= rhs->eval(fp);
-        case (ASSIGN_MOD):
-            return lhs_ref %= rhs->eval(fp);
-        default:
-            throw expr_error("unknown operator");
-        }
-        return 0;
- 
-    };
+    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
 };
 
 //=============================================================================
@@ -735,6 +662,156 @@ std::unique_ptr<ExprAST> parser(std::list<Token> &tokens) {
     }
     // unreachable
     return nullptr;
+}
+
+//! brief visitor to evalute expression AST
+class EvalExprVisitor : public ExprVisitor{
+  public:
+  int val;
+
+  public:
+  EvalExprVisitor(std::function<int&(const std::string &)> _fp) : fp(_fp){}
+  virtual ~EvalExprVisitor() {}
+
+  virtual void visit(IntegerExprAST &ast){
+    val = ast.Val;
+  }
+
+  virtual void visit(VariableExprAST &ast){
+    val = fp ? fp(ast.Name) : 0;
+  }
+
+  virtual void visit(UnaryExprAST &ast){
+    ast.rhs->accept(*this);
+    int rhs = val;
+    switch (ast.type) {
+    case (ADD):
+      val = +rhs; break;
+    case (SUB):
+      val = -rhs; break;
+    case (INV):
+      val = ~rhs; break;
+    case (NOT):
+      val = !rhs; break;
+    default:
+        throw expr_error("unknown operator");
+    }
+  }
+
+  virtual void visit(BinaryExprAST &ast){
+    ast.lhs->accept(*this);
+    int lhs = val;
+    ast.rhs->accept(*this);
+    int rhs = val;
+
+    switch (ast.type) {
+    case (ADD):
+        val = lhs + rhs; break;
+    case (SUB):
+        val = lhs - rhs; break;
+    case (MUL):
+        val = lhs * rhs; break;
+    case (DIV):
+        val = lhs / rhs; break;
+    case (MOD):
+        val = lhs % rhs; break;
+    case (AND):
+        val = lhs & rhs; break;
+    case (OR):
+        val = lhs | rhs; break;
+    case (XOR):
+        val = lhs ^ rhs; break;
+    case (LAND):
+        val = lhs && rhs; break;
+    case (LOR):
+        val = lhs || rhs; break;
+    case (SFTL):
+        val = lhs << rhs; break;
+    case (SFTR):
+        val = lhs >> rhs; break;
+    case (EQ):
+        val = lhs == rhs; break;
+    case (NE):
+        val = lhs != rhs; break;
+    case (LT):
+        val = lhs < rhs; break;
+    case (LE):
+        val = lhs <= rhs; break;
+    case (GT):
+        val = lhs > rhs; break;
+    case (GE):
+        val = lhs >= rhs; break;
+    default:
+        throw expr_error("unknown operator");
+    }
+  }
+
+  virtual void visit(ConditionalExprAST &ast){
+    ast.cond->accept(*this);
+    int cond = val;
+    ast.lhs->accept(*this);
+    int lhs = val;
+    ast.rhs->accept(*this);
+    int rhs = val;
+    val = cond ? lhs : rhs;
+  }
+
+  virtual void visit(AssignExprAST &ast){
+    ast.rhs->accept(*this);
+    int rhs = val;
+
+    ast.lhs->accept(*this);
+    int lhs = val;
+
+    switch (ast.type) {
+    case (ASSIGN):
+        lhs = rhs; break;
+    case (ASSIGN_OR):
+        lhs |= rhs; break;
+    case (ASSIGN_XOR):
+        lhs ^= rhs; break;
+    case (ASSIGN_AND):
+        lhs &= rhs; break;
+    case (ASSIGN_SL):
+        lhs <<= rhs; break;
+    case (ASSIGN_SR):
+        lhs >>= rhs; break;
+    case (ASSIGN_ADD):
+        lhs += rhs; break;
+    case (ASSIGN_SUB):
+        lhs -= rhs; break;
+    case (ASSIGN_MUL):
+        lhs *= rhs; break;
+    case (ASSIGN_DIV):
+        lhs /= rhs; break;
+    case (ASSIGN_MOD):
+        lhs %= rhs; break;
+    default:
+        throw expr_error("unknown operator");
+    }
+
+    if (ast.lhs->type != VAR) {
+        throw expr_error("cannot assign to except for variables");
+    }
+    if (!fp) {
+        throw expr_error("not define variavles accesor");
+    }
+
+
+    VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(ast.lhs.get());
+    int &lhs_ref = fp(lhs_ast->Name);
+    lhs_ref = val = lhs;
+  }
+
+  private:
+      std::function<int&(const std::string &)> fp;
+};
+
+
+int ExprAST::eval(std::function<int&(const std::string &)> fp){
+    auto evaluator = EvalExprVisitor(fp);
+    accept(evaluator);
+    return evaluator.val;
 }
 
 //=============================================================================
