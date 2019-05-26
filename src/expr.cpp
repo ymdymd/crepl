@@ -16,7 +16,7 @@ namespace expr {
 // util
 #ifdef _DEBUG
 #define FUNCTION_CALL_TRACE(msg)                                               \
-    std::cout << __FUNCTION__ << ":" << (msg) << std::endl
+  std::cout << __FUNCTION__ << ":" << (msg) << std::endl
 #else
 #define FUNCTION_CALL_TRACE(msg)
 #endif
@@ -28,92 +28,91 @@ namespace expr {
 // Lexer
 // lineの文字列をtokenに分割する。
 std::list<Token> lexer(const std::string &line) {
-    std::list<Token> tokens;
-    auto itr = line.cbegin();
-    auto ite = line.cend();
+  std::list<Token> tokens;
+  auto itr = line.cbegin();
+  auto ite = line.cend();
 
-    std::vector<Token> keywords = {
-        {IMMX, R"(^0[xX][0-9a-fA-F]+)"},
-        {IMMB, R"(^0[bB][0-1]+)"},
-        {IMM, R"(^[0-9]+)"},
-        {VAR, R"(^[a-zA-Z][a-zA-Z0-9]*)"},
-        {REG, R"(^\%[a-zA-Z][0-9]+)"},
-        {ASSIGN_SL, R"(^\<\<\=)"},
-        {ASSIGN_SR, R"(^\>\>\=)"},
-        {ASSIGN_OR, R"(^\|\=)"},
-        {ASSIGN_XOR, R"(^\^\=)"},
-        {ASSIGN_AND, R"(^\&\=)"},
-        {ASSIGN_ADD, R"(^\+\=)"},
-        {ASSIGN_SUB, R"(^\-\=)"},
-        {ASSIGN_MUL, R"(^\*\=)"},
-        {ASSIGN_DIV, R"(^\/\=)"},
-        {ASSIGN_MOD, R"(^\%\=)"},
-        {SFTL, R"(^\<\<)"},
-        {SFTR, R"(^\>\>)"},
-        {EQ, R"(^\=\=)"},
-        {NE, R"(^\!\=)"},
-        {LE, R"(^\<\=)"},
-        {GE, R"(^\>\=)"},
-        {LAND, R"(^\&\&)"},
-        {LOR, R"(^\|\|)"},
-        {LT, R"(^\<)"},
-        {GT, R"(^\>)"},
-        {ADD, R"(^\+)"},
-        {SUB, R"(^\-)"},
-        {MUL, R"(^\*)"},
-        {DIV, R"(^\/)"},
-        {MOD, R"(^\%)"},
-        {AND, R"(^\&)"},
-        {OR, R"(^\|)"},
-        {XOR, R"(^\^)"},
-        {INV, R"(^\~)"},
-        {NOT, R"(^\!)"},
-        {PARL, R"(^\()"},
-        {PARR, R"(^\))"},
-        {SEMICOLON, R"(^\;)"},
-        {COLON, R"(^\:)"},
-        {QUESTION, R"(^\?)"},
-        {ASSIGN, R"(^\=)"},
-    };
+  std::vector<Token> keywords = {
+      {IMMX, R"(^0[xX][0-9a-fA-F]+)"},
+      {IMMB, R"(^0[bB][0-1]+)"},
+      {IMM, R"(^[0-9]+)"},
+      {VAR, R"(^[a-zA-Z][a-zA-Z0-9]*)"},
+      {REG, R"(^\%[a-zA-Z][0-9]+)"},
+      {ASSIGN_SL, R"(^\<\<\=)"},
+      {ASSIGN_SR, R"(^\>\>\=)"},
+      {ASSIGN_OR, R"(^\|\=)"},
+      {ASSIGN_XOR, R"(^\^\=)"},
+      {ASSIGN_AND, R"(^\&\=)"},
+      {ASSIGN_ADD, R"(^\+\=)"},
+      {ASSIGN_SUB, R"(^\-\=)"},
+      {ASSIGN_MUL, R"(^\*\=)"},
+      {ASSIGN_DIV, R"(^\/\=)"},
+      {ASSIGN_MOD, R"(^\%\=)"},
+      {SFTL, R"(^\<\<)"},
+      {SFTR, R"(^\>\>)"},
+      {EQ, R"(^\=\=)"},
+      {NE, R"(^\!\=)"},
+      {LE, R"(^\<\=)"},
+      {GE, R"(^\>\=)"},
+      {LAND, R"(^\&\&)"},
+      {LOR, R"(^\|\|)"},
+      {LT, R"(^\<)"},
+      {GT, R"(^\>)"},
+      {ADD, R"(^\+)"},
+      {SUB, R"(^\-)"},
+      {MUL, R"(^\*)"},
+      {DIV, R"(^\/)"},
+      {MOD, R"(^\%)"},
+      {AND, R"(^\&)"},
+      {OR, R"(^\|)"},
+      {XOR, R"(^\^)"},
+      {INV, R"(^\~)"},
+      {NOT, R"(^\!)"},
+      {PARL, R"(^\()"},
+      {PARR, R"(^\))"},
+      {SEMICOLON, R"(^\;)"},
+      {COLON, R"(^\:)"},
+      {QUESTION, R"(^\?)"},
+      {ASSIGN, R"(^\=)"},
+  };
 
-    while (itr != ite) {
-        std::smatch m;
+  while (itr != ite) {
+    std::smatch m;
 
-        // skip white spcae
-        if (regex_search(itr, ite, m, std::regex(R"(^[ \t]+)"))) {
-            itr = m[0].second;
-            continue;
-        }
-
-        Token token;
-        size_t i;
-        for (i = 0; i < keywords.size(); i++) {
-            if (regex_search(itr, ite, m, std::regex(keywords[i].str))) {
-                itr = m[0].second;
-                token.str = m[0];
-                token.type = keywords[i].type;
-                break;
-            }
-        }
-
-        if (token.type) {
-            tokens.push_back(token);
-        } else { //見つからなかった場合は、残りをすべてtokensに入れる
-#if 1
-            throw expr_error("invalid token");
-#else
-            token.str = std::string(itr, ite);
-            token.type = INVALID;
-            tokens.push_back(token);
-            break;
-#endif
-        }
+    // skip white spcae
+    if (regex_search(itr, ite, m, std::regex(R"(^[ \t]+)"))) {
+      itr = m[0].second;
+      continue;
     }
 
-    tokens.push_back(Token(EOL, std::string("")));
-    return tokens;
-}
+    Token token;
+    size_t i;
+    for (i = 0; i < keywords.size(); i++) {
+      if (regex_search(itr, ite, m, std::regex(keywords[i].str))) {
+        itr = m[0].second;
+        token.str = m[0];
+        token.type = keywords[i].type;
+        break;
+      }
+    }
 
+    if (token.type) {
+      tokens.push_back(token);
+    } else { //見つからなかった場合は、残りをすべてtokensに入れる
+#if 1
+      throw expr_error("invalid token");
+#else
+      token.str = std::string(itr, ite);
+      token.type = INVALID;
+      tokens.push_back(token);
+      break;
+#endif
+    }
+  }
+
+  tokens.push_back(Token(EOL, std::string("")));
+  return tokens;
+}
 
 // Forward declaration
 class IntegerExprAST;
@@ -126,16 +125,16 @@ class AssignExprAST;
 //=============================================================================
 // Visitor
 class ExprVisitor {
-  public:
+public:
   ExprVisitor() {}
   virtual ~ExprVisitor() {}
 
-  virtual void visit(IntegerExprAST &) =0;
-  virtual void visit(VariableExprAST &) =0;
-  virtual void visit(UnaryExprAST &) =0;
-  virtual void visit(BinaryExprAST &) =0;
-  virtual void visit(ConditionalExprAST &) =0;
-  virtual void visit(AssignExprAST &) =0;
+  virtual void visit(IntegerExprAST &) = 0;
+  virtual void visit(VariableExprAST &) = 0;
+  virtual void visit(UnaryExprAST &) = 0;
+  virtual void visit(BinaryExprAST &) = 0;
+  virtual void visit(ConditionalExprAST &) = 0;
+  virtual void visit(AssignExprAST &) = 0;
 };
 
 //=============================================================================
@@ -145,75 +144,74 @@ class ExprVisitor {
 // IntegerExprAST - Expression class for integer literals like "1".
 // IntegerExprAST - "1"のような整数数値リテラルのための式クラス。
 class IntegerExprAST : public ExprAST {
-  public:
-    const int Val;
-    explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
-    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
+public:
+  const int Val;
+  explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // VariableExprAST - Expression class for referencing a variable, like "a".
 // VariableExprAST - "a"のような変数を参照するための式クラス。
 class VariableExprAST : public ExprAST {
-  public:
-    const std::string Name;
-    explicit VariableExprAST(std::string Name)
-        : ExprAST(VAR), Name(std::move(Name)) {}
-    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
+public:
+  const std::string Name;
+  explicit VariableExprAST(std::string Name)
+      : ExprAST(VAR), Name(std::move(Name)) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // UnaryExprAST - Expression class for a unary operator.
 class UnaryExprAST : public ExprAST {
-  public:
-    std::unique_ptr<ExprAST> rhs;
+public:
+  std::unique_ptr<ExprAST> rhs;
 
-  public:
-    UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
-        : ExprAST(type), rhs(std::move(rhs)) {}
-    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
+public:
+  UnaryExprAST(Type type, std::unique_ptr<ExprAST> rhs)
+      : ExprAST(type), rhs(std::move(rhs)) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // BinaryExprAST - Expression class for a binary operator.
 // BinaryExprAST - 二項演算子のための式クラス。
 class BinaryExprAST : public ExprAST {
-  public:
-    const std::unique_ptr<ExprAST> lhs, rhs;
+public:
+  const std::unique_ptr<ExprAST> lhs, rhs;
 
-  public:
-    BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs,
-                  std::unique_ptr<ExprAST> rhs)
-        : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
+public:
+  BinaryExprAST(Type type, std::unique_ptr<ExprAST> lhs,
+                std::unique_ptr<ExprAST> rhs)
+      : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // ConditionalExprAST - Expression class for a conditinal operator.
 class ConditionalExprAST : public ExprAST {
-  public:
-    const std::unique_ptr<ExprAST> cond, lhs, rhs;
+public:
+  const std::unique_ptr<ExprAST> cond, lhs, rhs;
 
-  public:
-    ConditionalExprAST(std::unique_ptr<ExprAST> cond,
-                       std::unique_ptr<ExprAST> lhs,
-                       std::unique_ptr<ExprAST> rhs)
-        : ExprAST(QUESTION), cond(std::move(cond)), lhs(std::move(lhs)),
-          rhs(std::move(rhs)) {}
-    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
+public:
+  ConditionalExprAST(std::unique_ptr<ExprAST> cond,
+                     std::unique_ptr<ExprAST> lhs, std::unique_ptr<ExprAST> rhs)
+      : ExprAST(QUESTION), cond(std::move(cond)), lhs(std::move(lhs)),
+        rhs(std::move(rhs)) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //-----------------------------------------------------------------------------
 // AssignExprAST
 class AssignExprAST : public ExprAST {
-  public:
-    const std::unique_ptr<ExprAST> lhs, rhs;
+public:
+  const std::unique_ptr<ExprAST> lhs, rhs;
 
-  public:
-    AssignExprAST(Type type, std::unique_ptr<ExprAST> lhs,
-                  std::unique_ptr<ExprAST> rhs)
-        : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-    virtual void accept(ExprVisitor &visitor) {visitor.visit(*this);}
+public:
+  AssignExprAST(Type type, std::unique_ptr<ExprAST> lhs,
+                std::unique_ptr<ExprAST> rhs)
+      : ExprAST(type), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+  virtual void accept(ExprVisitor &visitor) { visitor.visit(*this); }
 };
 
 //=============================================================================
@@ -226,15 +224,15 @@ static std::unique_ptr<ExprAST> expression(std::list<Token> &tokens);
 unary_expression
 */
 static std::unique_ptr<ExprAST> unary_expression(std::list<Token> &tokens) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    Type op = tokens.front().type;
-    if (op == ADD || op == SUB || op == INV || op == NOT) {
-        tokens.pop_front(); // eat op
-        auto rhs = primary_expression(tokens);
-        assert(rhs);
-        return std::make_unique<UnaryExprAST>(op, std::move(rhs));
-    }
-    return primary_expression(tokens);
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  Type op = tokens.front().type;
+  if (op == ADD || op == SUB || op == INV || op == NOT) {
+    tokens.pop_front(); // eat op
+    auto rhs = primary_expression(tokens);
+    assert(rhs);
+    return std::make_unique<UnaryExprAST>(op, std::move(rhs));
+  }
+  return primary_expression(tokens);
 }
 
 #if 0
@@ -473,33 +471,32 @@ binary_expression
 */
 static std::unique_ptr<ExprAST>
 binary_expression(std::list<Token> &tokens, std::unique_ptr<ExprAST> lhs) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    if (!lhs) {
-        lhs = unary_expression(tokens);
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  if (!lhs) {
+    lhs = unary_expression(tokens);
+  }
+  assert(lhs);
+  while (1) {
+    Type type = tokens.front().type;
+    // 現在のトークンが、2項演算子でない場合は、lhsを返す。
+    if (type < BINOP_BIGIN || BINOP_END < type) {
+      return lhs;
     }
-    assert(lhs);
-    while (1) {
-        Type type = tokens.front().type;
-        // 現在のトークンが、2項演算子でない場合は、lhsを返す。
-        if (type < BINOP_BIGIN || BINOP_END < type) {
-            return lhs;
-        }
 
-        tokens.pop_front(); // eat op
-        auto rhs = unary_expression(tokens);
-        assert(rhs);
+    tokens.pop_front(); // eat op
+    auto rhs = unary_expression(tokens);
+    assert(rhs);
 
-        //現在の演算優先度が、rhsの後の二項演算の優先度より低い場合は、
-        //現在のrhsを初期ノードとした、二項演算ツリーを作る。
-        if (type < tokens.front().type) {
-            rhs = binary_expression(tokens, std::move(rhs));
-            assert(rhs);
-        }
-
-        // merge lhs/rhs
-        lhs = std::make_unique<BinaryExprAST>(type, std::move(lhs),
-                                              std::move(rhs));
+    //現在の演算優先度が、rhsの後の二項演算の優先度より低い場合は、
+    //現在のrhsを初期ノードとした、二項演算ツリーを作る。
+    if (type < tokens.front().type) {
+      rhs = binary_expression(tokens, std::move(rhs));
+      assert(rhs);
     }
+
+    // merge lhs/rhs
+    lhs = std::make_unique<BinaryExprAST>(type, std::move(lhs), std::move(rhs));
+  }
 }
 #endif
 
@@ -516,32 +513,32 @@ conditional_expression
 static std::unique_ptr<ExprAST>
 conditional_expression(std::list<Token> &tokens,
                        std::unique_ptr<ExprAST> cond) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    if (!cond) {
-        cond = binary_expression(tokens, nullptr);
-    }
-    assert(cond);
-    Type op = tokens.front().type;
-    if (op != QUESTION) {
-        return cond;
-    }
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  if (!cond) {
+    cond = binary_expression(tokens, nullptr);
+  }
+  assert(cond);
+  Type op = tokens.front().type;
+  if (op != QUESTION) {
+    return cond;
+  }
 
-    tokens.pop_front(); // eat ?
-    auto lhs = expression(tokens);
-    assert(lhs);
+  tokens.pop_front(); // eat ?
+  auto lhs = expression(tokens);
+  assert(lhs);
 
-    op = tokens.front().type;
-    if (op == COLON) {
-        tokens.pop_front(); // eat :
-        auto rhs = conditional_expression(tokens, nullptr);
-        assert(rhs);
-        return conditional_expression(
-            tokens, std::make_unique<ConditionalExprAST>(
-                        std::move(cond), std::move(lhs), std::move(rhs)));
-    } else {
-        throw expr_error("expected ':'\n");
-    }
-    return lhs;
+  op = tokens.front().type;
+  if (op == COLON) {
+    tokens.pop_front(); // eat :
+    auto rhs = conditional_expression(tokens, nullptr);
+    assert(rhs);
+    return conditional_expression(
+        tokens, std::make_unique<ConditionalExprAST>(
+                    std::move(cond), std::move(lhs), std::move(rhs)));
+  } else {
+    throw expr_error("expected ':'\n");
+  }
+  return lhs;
 }
 
 /*-----------------------------------------------------------------------------
@@ -551,24 +548,24 @@ assignment_expression
 */
 static std::unique_ptr<ExprAST>
 assignment_expression(std::list<Token> &tokens, std::unique_ptr<ExprAST> lhs) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
+  FUNCTION_CALL_TRACE(tokens.front().str);
 
-    if (!lhs) {
-        lhs = conditional_expression(tokens, nullptr);
-    }
-    assert(lhs);
+  if (!lhs) {
+    lhs = conditional_expression(tokens, nullptr);
+  }
+  assert(lhs);
 
-    Type opc = tokens.front().type;
-    if (opc < ASSIGN_BIGIN || ASSIGN_END < opc) {
-        return lhs;
-    }
+  Type opc = tokens.front().type;
+  if (opc < ASSIGN_BIGIN || ASSIGN_END < opc) {
+    return lhs;
+  }
 
-    tokens.pop_front(); // eat opc
-    auto rhs = assignment_expression(tokens, nullptr);
-    assert(rhs);
-    return assignment_expression(
-        tokens,
-        std::make_unique<AssignExprAST>(opc, std::move(lhs), std::move(rhs)));
+  tokens.pop_front(); // eat opc
+  auto rhs = assignment_expression(tokens, nullptr);
+  assert(rhs);
+  return assignment_expression(
+      tokens,
+      std::make_unique<AssignExprAST>(opc, std::move(lhs), std::move(rhs)));
 }
 
 /*-----------------------------------------------------------------------------
@@ -576,9 +573,9 @@ expression
 : equality_expression
 */
 static std::unique_ptr<ExprAST> expression(std::list<Token> &tokens) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    //	return conditional_expression(tokens, nullptr);
-    return assignment_expression(tokens, nullptr);
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  //	return conditional_expression(tokens, nullptr);
+  return assignment_expression(tokens, nullptr);
 }
 
 /*-----------------------------------------------------------------------------
@@ -586,22 +583,22 @@ integer_expression (terminate)
 : number
 */
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token> &tokens) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    int value = 0;
-    if (tokens.front().type == IMM) {
-        value = std::stoi(tokens.front().str, nullptr, 0);
-    } else if (tokens.front().type == IMMX) {
-        value = static_cast<int>(
-            std::stoul(tokens.front().str.substr(2), nullptr, 16));
-    } else if (tokens.front().type == IMMB) {
-        value = static_cast<int>(
-            std::stoul(tokens.front().str.substr(2), nullptr, 2));
-    } else {
-        assert(0 && "illigal token type");
-    }
-    auto Result = std::make_unique<IntegerExprAST>(value);
-    tokens.pop_front(); // consume the number
-    return std::move(Result);
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  int value = 0;
+  if (tokens.front().type == IMM) {
+    value = std::stoi(tokens.front().str, nullptr, 0);
+  } else if (tokens.front().type == IMMX) {
+    value =
+        static_cast<int>(std::stoul(tokens.front().str.substr(2), nullptr, 16));
+  } else if (tokens.front().type == IMMB) {
+    value =
+        static_cast<int>(std::stoul(tokens.front().str.substr(2), nullptr, 2));
+  } else {
+    assert(0 && "illigal token type");
+  }
+  auto Result = std::make_unique<IntegerExprAST>(value);
+  tokens.pop_front(); // consume the number
+  return std::move(Result);
 }
 
 /*-----------------------------------------------------------------------------
@@ -609,11 +606,11 @@ variable_expression (terminate)
 : variable
 */
 static std::unique_ptr<ExprAST> variable_expression(std::list<Token> &tokens) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    assert(tokens.front().type == VAR || tokens.front().type == REG);
-    auto Result = std::make_unique<VariableExprAST>(tokens.front().str);
-    tokens.pop_front(); // eat variable
-    return std::move(Result);
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  assert(tokens.front().type == VAR || tokens.front().type == REG);
+  auto Result = std::make_unique<VariableExprAST>(tokens.front().str);
+  tokens.pop_front(); // eat variable
+  return std::move(Result);
 }
 
 /*-----------------------------------------------------------------------------
@@ -622,83 +619,83 @@ primary_expression
 | PARL expression PARR
 */
 static std::unique_ptr<ExprAST> primary_expression(std::list<Token> &tokens) {
-    FUNCTION_CALL_TRACE(tokens.front().str);
-    switch (tokens.front().type) {
-    default:
-        throw expr_error("unknown token when expecting an expression");
-    case IMM:
-    case IMMX:
-    case IMMB:
-        return integer_expression(tokens);
-    case VAR:
-    case REG:
-        return variable_expression(tokens);
-    case PARL: {
-        tokens.pop_front();          // eat (.
-        auto V = expression(tokens); // expression
-        assert(V);
-        //副次式を解析した後、”)”の出現がない可能性がある。
-        if (tokens.front().type != PARR) {
-            throw expr_error("expected ')'");
-        }
-        tokens.pop_front(); // eat ).
-        return V;
+  FUNCTION_CALL_TRACE(tokens.front().str);
+  switch (tokens.front().type) {
+  default:
+    throw expr_error("unknown token when expecting an expression");
+  case IMM:
+  case IMMX:
+  case IMMB:
+    return integer_expression(tokens);
+  case VAR:
+  case REG:
+    return variable_expression(tokens);
+  case PARL: {
+    tokens.pop_front();          // eat (.
+    auto V = expression(tokens); // expression
+    assert(V);
+    //副次式を解析した後、”)”の出現がない可能性がある。
+    if (tokens.front().type != PARR) {
+      throw expr_error("expected ')'");
     }
-    }
+    tokens.pop_front(); // eat ).
+    return V;
+  }
+  }
 }
 
 //=============================================================================
 std::unique_ptr<ExprAST> parser(std::list<Token> &tokens) {
-    auto V = expression(tokens);
-    if (tokens.front().type == EOL) {
-        return V;
-    }
+  auto V = expression(tokens);
+  if (tokens.front().type == EOL) {
+    return V;
+  }
 
-    if (tokens.front().type == PARR) {
-        throw expr_error("expected '('");
-    } else {
-        throw expr_error("unknown token when expecting an operator '" +
-                         tokens.front().str + "'");
-    }
-    // unreachable
-    return nullptr;
+  if (tokens.front().type == PARR) {
+    throw expr_error("expected '('");
+  } else {
+    throw expr_error("unknown token when expecting an operator '" +
+                     tokens.front().str + "'");
+  }
+  // unreachable
+  return nullptr;
 }
 
 //! brief visitor to evalute expression AST
-class EvalExprVisitor : public ExprVisitor{
-  public:
+class EvalExprVisitor : public ExprVisitor {
+public:
   int val;
 
-  public:
-  EvalExprVisitor(std::function<int&(const std::string &)> _fp) : fp(_fp){}
+public:
+  EvalExprVisitor(std::function<int &(const std::string &)> _fp) : fp(_fp) {}
   virtual ~EvalExprVisitor() {}
 
-  virtual void visit(IntegerExprAST &ast){
-    val = ast.Val;
-  }
+  virtual void visit(IntegerExprAST &ast) { val = ast.Val; }
 
-  virtual void visit(VariableExprAST &ast){
-    val = fp ? fp(ast.Name) : 0;
-  }
+  virtual void visit(VariableExprAST &ast) { val = fp ? fp(ast.Name) : 0; }
 
-  virtual void visit(UnaryExprAST &ast){
+  virtual void visit(UnaryExprAST &ast) {
     ast.rhs->accept(*this);
     int rhs = val;
     switch (ast.type) {
     case (ADD):
-      val = +rhs; break;
+      val = +rhs;
+      break;
     case (SUB):
-      val = -rhs; break;
+      val = -rhs;
+      break;
     case (INV):
-      val = ~rhs; break;
+      val = ~rhs;
+      break;
     case (NOT):
-      val = !rhs; break;
+      val = !rhs;
+      break;
     default:
-        throw expr_error("unknown operator");
+      throw expr_error("unknown operator");
     }
   }
 
-  virtual void visit(BinaryExprAST &ast){
+  virtual void visit(BinaryExprAST &ast) {
     ast.lhs->accept(*this);
     int lhs = val;
     ast.rhs->accept(*this);
@@ -706,47 +703,65 @@ class EvalExprVisitor : public ExprVisitor{
 
     switch (ast.type) {
     case (ADD):
-        val = lhs + rhs; break;
+      val = lhs + rhs;
+      break;
     case (SUB):
-        val = lhs - rhs; break;
+      val = lhs - rhs;
+      break;
     case (MUL):
-        val = lhs * rhs; break;
+      val = lhs * rhs;
+      break;
     case (DIV):
-        val = lhs / rhs; break;
+      val = lhs / rhs;
+      break;
     case (MOD):
-        val = lhs % rhs; break;
+      val = lhs % rhs;
+      break;
     case (AND):
-        val = lhs & rhs; break;
+      val = lhs & rhs;
+      break;
     case (OR):
-        val = lhs | rhs; break;
+      val = lhs | rhs;
+      break;
     case (XOR):
-        val = lhs ^ rhs; break;
+      val = lhs ^ rhs;
+      break;
     case (LAND):
-        val = lhs && rhs; break;
+      val = lhs && rhs;
+      break;
     case (LOR):
-        val = lhs || rhs; break;
+      val = lhs || rhs;
+      break;
     case (SFTL):
-        val = lhs << rhs; break;
+      val = lhs << rhs;
+      break;
     case (SFTR):
-        val = lhs >> rhs; break;
+      val = lhs >> rhs;
+      break;
     case (EQ):
-        val = lhs == rhs; break;
+      val = lhs == rhs;
+      break;
     case (NE):
-        val = lhs != rhs; break;
+      val = lhs != rhs;
+      break;
     case (LT):
-        val = lhs < rhs; break;
+      val = lhs < rhs;
+      break;
     case (LE):
-        val = lhs <= rhs; break;
+      val = lhs <= rhs;
+      break;
     case (GT):
-        val = lhs > rhs; break;
+      val = lhs > rhs;
+      break;
     case (GE):
-        val = lhs >= rhs; break;
+      val = lhs >= rhs;
+      break;
     default:
-        throw expr_error("unknown operator");
+      throw expr_error("unknown operator");
     }
   }
 
-  virtual void visit(ConditionalExprAST &ast){
+  virtual void visit(ConditionalExprAST &ast) {
     ast.cond->accept(*this);
     int cond = val;
     ast.lhs->accept(*this);
@@ -756,7 +771,7 @@ class EvalExprVisitor : public ExprVisitor{
     val = cond ? lhs : rhs;
   }
 
-  virtual void visit(AssignExprAST &ast){
+  virtual void visit(AssignExprAST &ast) {
     ast.rhs->accept(*this);
     int rhs = val;
 
@@ -765,67 +780,76 @@ class EvalExprVisitor : public ExprVisitor{
 
     switch (ast.type) {
     case (ASSIGN):
-        lhs = rhs; break;
+      lhs = rhs;
+      break;
     case (ASSIGN_OR):
-        lhs |= rhs; break;
+      lhs |= rhs;
+      break;
     case (ASSIGN_XOR):
-        lhs ^= rhs; break;
+      lhs ^= rhs;
+      break;
     case (ASSIGN_AND):
-        lhs &= rhs; break;
+      lhs &= rhs;
+      break;
     case (ASSIGN_SL):
-        lhs <<= rhs; break;
+      lhs <<= rhs;
+      break;
     case (ASSIGN_SR):
-        lhs >>= rhs; break;
+      lhs >>= rhs;
+      break;
     case (ASSIGN_ADD):
-        lhs += rhs; break;
+      lhs += rhs;
+      break;
     case (ASSIGN_SUB):
-        lhs -= rhs; break;
+      lhs -= rhs;
+      break;
     case (ASSIGN_MUL):
-        lhs *= rhs; break;
+      lhs *= rhs;
+      break;
     case (ASSIGN_DIV):
-        lhs /= rhs; break;
+      lhs /= rhs;
+      break;
     case (ASSIGN_MOD):
-        lhs %= rhs; break;
+      lhs %= rhs;
+      break;
     default:
-        throw expr_error("unknown operator");
+      throw expr_error("unknown operator");
     }
 
     if (ast.lhs->type != VAR) {
-        throw expr_error("cannot assign to except for variables");
+      throw expr_error("cannot assign to except for variables");
     }
     if (!fp) {
-        throw expr_error("not define variavles accesor");
+      throw expr_error("not define variavles accesor");
     }
-
 
     VariableExprAST *lhs_ast = static_cast<VariableExprAST *>(ast.lhs.get());
     int &lhs_ref = fp(lhs_ast->Name);
     lhs_ref = val = lhs;
   }
 
-  private:
-      std::function<int&(const std::string &)> fp;
+private:
+  std::function<int &(const std::string &)> fp;
 };
 
-
-int ExprAST::eval(std::function<int&(const std::string &)> fp){
-    auto evaluator = EvalExprVisitor(fp);
-    accept(evaluator);
-    return evaluator.val;
+int ExprAST::eval(std::function<int &(const std::string &)> fp) {
+  auto evaluator = EvalExprVisitor(fp);
+  accept(evaluator);
+  return evaluator.val;
 }
 
 //=============================================================================
 // evalute expr_str
 std::unique_ptr<ExprAST> parser(const std::string &expr_str) {
-    auto tokens = lexer(expr_str);
-    return parser(tokens);
+  auto tokens = lexer(expr_str);
+  return parser(tokens);
 }
 
 //=============================================================================
 // evalute expr_str
 int eval(const std::string expr_str,
-        std::function<int&(const std::string &)> fp){
-    return parser(expr_str)->eval(fp);
+         std::function<int &(const std::string &)> fp) {
+  return parser(expr_str)->eval(fp);
 }
 
 } // namespace expr

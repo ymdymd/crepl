@@ -1,9 +1,9 @@
 ﻿#pragma once
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
-#include <functional>
 
 //-----------------------------------------------------------------------------
 /*
@@ -48,71 +48,70 @@ namespace expr {
 //-----------------------------------------------------------------------------
 // token / node type definition
 enum Type {
-    INVALID = -1, // invalid token
-    EOL = 0,      // End Of Line must be 0.
-    IMM,          //	integer_expression
-    IMMX,         //	integer_expression(0x)
-    IMMB,         //	integer_expression(0b)
-    VAR,          //    variable_expression
-    REG,          //	  register_variable_expression
-    PARL,         // (  parenthesis_expression
-    PARR,         // )  parenthesis_expression
-    QUESTION,     // ?  conditional_expression
-    SEMICOLON,    // :
-    COLON,        // ;
+  INVALID = -1, // invalid token
+  EOL = 0,      // End Of Line must be 0.
+  IMM,          //	integer_expression
+  IMMX,         //	integer_expression(0x)
+  IMMB,         //	integer_expression(0b)
+  VAR,          //    variable_expression
+  REG,          //	  register_variable_expression
+  PARL,         // (  parenthesis_expression
+  PARR,         // )  parenthesis_expression
+  QUESTION,     // ?  conditional_expression
+  SEMICOLON,    // :
+  COLON,        // ;
 
-    // assignment_expression
-    ASSIGN_BIGIN,
-    ASSIGN,     // =  assignment_expression
-    ASSIGN_OR,  // |=  assignment_expression
-    ASSIGN_XOR, // ^=  assignment_expression
-    ASSIGN_AND, // &=  assignment_expression
-    ASSIGN_SL,  // <<=  assignment_expression
-    ASSIGN_SR,  // >>=  assignment_expression
-    ASSIGN_ADD, // +=  assignment_expression
-    ASSIGN_SUB, // -=  assignment_expression
-    ASSIGN_MUL, // *=  assignment_expression
-    ASSIGN_DIV, // /=  assignment_expression
-    ASSIGN_MOD, // %=  assignment_expression
-    ASSIGN_END,
+  // assignment_expression
+  ASSIGN_BIGIN,
+  ASSIGN,     // =  assignment_expression
+  ASSIGN_OR,  // |=  assignment_expression
+  ASSIGN_XOR, // ^=  assignment_expression
+  ASSIGN_AND, // &=  assignment_expression
+  ASSIGN_SL,  // <<=  assignment_expression
+  ASSIGN_SR,  // >>=  assignment_expression
+  ASSIGN_ADD, // +=  assignment_expression
+  ASSIGN_SUB, // -=  assignment_expression
+  ASSIGN_MUL, // *=  assignment_expression
+  ASSIGN_DIV, // /=  assignment_expression
+  ASSIGN_MOD, // %=  assignment_expression
+  ASSIGN_END,
 
-    // binary_ops_expression
-    BINOP_BIGIN,
-    LOR,  // || logical_or_expression
-    LAND, // && logical_and_expression
-    OR,   // |  inclusive_or_expression
-    XOR,  // ^  exclusive_or_expression
-    AND,  // &  and_expression
-    EQ,   // == equality_expression
-    NE,   // != equality_expression
-    LT,   // <  relational_expression
-    LE,   // <= relational_expression
-    GT,   // >  relational_expression
-    GE,   // >= relational_expression
-    SFTL, // << shift_expression
-    SFTR, // >> shift_expression
-    ADD,  // +  additive_expression
-    SUB,  // -  additive_expression
-    MUL,  // *  multiplicative_expression
-    DIV,  // /  multiplicative_expression
-    MOD,  // %  multiplicative_expression
-    BINOP_END,
+  // binary_ops_expression
+  BINOP_BIGIN,
+  LOR,  // || logical_or_expression
+  LAND, // && logical_and_expression
+  OR,   // |  inclusive_or_expression
+  XOR,  // ^  exclusive_or_expression
+  AND,  // &  and_expression
+  EQ,   // == equality_expression
+  NE,   // != equality_expression
+  LT,   // <  relational_expression
+  LE,   // <= relational_expression
+  GT,   // >  relational_expression
+  GE,   // >= relational_expression
+  SFTL, // << shift_expression
+  SFTR, // >> shift_expression
+  ADD,  // +  additive_expression
+  SUB,  // -  additive_expression
+  MUL,  // *  multiplicative_expression
+  DIV,  // /  multiplicative_expression
+  MOD,  // %  multiplicative_expression
+  BINOP_END,
 
-    // unary_expression
-    INV, // ~  unary_expression
-    NOT, // !  unary_expression
+  // unary_expression
+  INV, // ~  unary_expression
+  NOT, // !  unary_expression
 
 };
 
 //-----------------------------------------------------------------------------
 // token struct
 struct Token {
-    Type type;       // token type
-    std::string str; // token string
-    Token(void) : type(EOL), str(""){};
-    Token(Type _type, std::string _str) : type(_type), str(std::move(_str)){};
+  Type type;       // token type
+  std::string str; // token string
+  Token(void) : type(EOL), str(""){};
+  Token(Type _type, std::string _str) : type(_type), str(std::move(_str)){};
 };
-
 
 //-----------------------------------------------------------------------------
 // Vistor
@@ -121,12 +120,12 @@ class ExprVisitor;
 //-----------------------------------------------------------------------------
 // AST (Abstract Syntax Tree)
 class ExprAST {
-  public:
-    const Type type; // node type
-    explicit ExprAST(const Type _type) : type(_type) {}
-    virtual ~ExprAST() = default;
-    virtual void accept(ExprVisitor &) = 0;
-    int eval(std::function<int&(const std::string &)> fp = nullptr);
+public:
+  const Type type; // node type
+  explicit ExprAST(const Type _type) : type(_type) {}
+  virtual ~ExprAST() = default;
+  virtual void accept(ExprVisitor &) = 0;
+  int eval(std::function<int &(const std::string &)> fp = nullptr);
 };
 
 //-----------------------------------------------------------------------------
@@ -151,6 +150,6 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str);
 //-----------------------------------------------------------------------------
 // evalute expr_str
 int eval(const std::string expr_str,
-        std::function<int&(const std::string &)> fp = nullptr);
+         std::function<int &(const std::string &)> fp = nullptr);
 
 } // namespace expr
