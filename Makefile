@@ -35,9 +35,10 @@ CFLAGS	+= -O3
 CXXFLAGS	+= -O3
 endif
 
+TIDYFLAGS := -fix -fix-errors 
 #TIDYFLAGS := -fix -fix-errors -header-filter=.* 
-TIDYFLAGS := -fix -header-filter=.* 
-TIDYFLAGS += --checks=-*,google-*,modernize-*
+#TIDYFLAGS := -fix -header-filter=.* 
+#TIDYFLAGS += --checks=-*,google-*,modernize-*
 #TIDYFLAGS += --checks=-*,readability-*
 #TIDYFLAGS += --checks=-*,clang-analyzer-*,-clang-analyzer-cplusplus*,cert-*,readability-*
 #TIDYFLAGS += --checks=readability-braces-around-statements
@@ -73,8 +74,8 @@ run: $(TARGET)
 tidy:	$(SRCS)
 	clang-tidy $(TIDYFLAGS) $^ -- $(CPPFLAGS) $(CXXFLAGS)
 
-.PHONY: format
-format:	tidy
+.PHONY:
+format:
 	clang-format -i $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
 
 .PHONY: test

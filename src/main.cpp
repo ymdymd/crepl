@@ -1,12 +1,12 @@
 #include "expr.h"
 #include "macro.h"
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <map>
 #include <memory>
 #include <regex>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string>
 
 #define USE_EDITLINE
@@ -61,15 +61,15 @@ static void help() {
 }
 
 //-----------------------------------------------------------------------------
-static void print(std::map<std::string, int> &symbols) {
+static void print(const std::map<std::string, int> &symbols) {
   for (auto &itr : symbols) {
     std::cout << itr.first << " = " << itr.second << "\n";
   }
 }
 
-static void eval(const std::string line, std::map<std::string, int> &symbols) {
+static void eval(const std::string &line, std::map<std::string, int> *symbols) {
   auto get_symbol_ref = [&](const std::string &symbol) -> int & {
-    return symbols[symbol];
+    return (*symbols)[symbol];
   };
 
   try {
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 #ifdef USE_EDITLINE
   using_history();
   // read_history(".history"); // [ToDo]historyファイルが無いときの動作の検証
-  while (1) {
+  while (true) {
     char *buf = readline("> ");
     std::string line(buf);
     free(buf);
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     if (line == ":p") {
       print(symbols);
     } else { // evalute expresion
-      eval(line, symbols);
+      eval(line, &symbols);
     }
   }
 // write_history(".history");

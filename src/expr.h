@@ -107,9 +107,9 @@ enum Type {
 //-----------------------------------------------------------------------------
 // token struct
 struct Token {
-  Type type;       // token type
-  std::string str; // token string
-  Token(void) : type(EOL), str(""){};
+  Type type{EOL};    // token type
+  std::string str{}; // token string
+  Token() = default;
   Token(Type _type, std::string _str) : type(_type), str(std::move(_str)){};
 };
 
@@ -124,13 +124,13 @@ public:
   const Type type; // node type
   explicit ExprAST(const Type _type) : type(_type) {}
   virtual ~ExprAST() = default;
-  virtual void accept(ExprVisitor &) = 0;
+  virtual void accept(ExprVisitor *) = 0;
   int eval(std::function<int &(const std::string &)> fp = nullptr);
 };
 
 //-----------------------------------------------------------------------------
 // exception
-typedef std::runtime_error expr_error;
+using expr_error = std::runtime_error;
 
 // class expr_error : public std::runtime_error {
 //};
@@ -144,12 +144,12 @@ std::list<Token> lexer(const std::string &line);
 
 //-----------------------------------------------------------------------------
 // parser
-std::unique_ptr<ExprAST> parser(std::list<Token> &tokens);
+std::unique_ptr<ExprAST> parser(std::list<Token> *tokens);
 std::unique_ptr<ExprAST> parser(const std::string &expr_str);
 
 //-----------------------------------------------------------------------------
 // evalute expr_str
-int eval(const std::string expr_str,
+int eval(const std::string &expr_str,
          std::function<int &(const std::string &)> fp = nullptr);
 
 } // namespace expr
