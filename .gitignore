@@ -253,3 +253,6 @@ crepl
 
 # coverage report
 coverage
+
+# doxygen output
+doxygen

@@ -124,7 +124,7 @@ class ConditionalExprAST;
 class AssignExprAST;
 
 //=============================================================================
-// Visitor
+//! \brief abstruct visitor class for expression AST
 class ExprVisitor {
 public:
   ExprVisitor() = default;
@@ -141,9 +141,8 @@ public:
 //=============================================================================
 // AST (Abstract Syntax Tree)
 //-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// IntegerExprAST - Expression class for integer literals like "1".
-// IntegerExprAST - "1"のような整数数値リテラルのための式クラス。
+//! \brief Expression class for integer literals like "1".
+//! \brief "1"のような整数数値リテラルのための式クラス。
 class IntegerExprAST : public ExprAST {
 public:
   const int Val;
@@ -152,8 +151,8 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// VariableExprAST - Expression class for referencing a variable, like "a".
-// VariableExprAST - "a"のような変数を参照するための式クラス。
+//! \brief Expression class for referencing a variable, like "a".
+//! \brief "a"のような変数を参照するための式クラス。
 class VariableExprAST : public ExprAST {
 public:
   const std::string Name;
@@ -163,7 +162,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// UnaryExprAST - Expression class for a unary operator.
+//! \brief Expression class for a unary operator.
 class UnaryExprAST : public ExprAST {
 public:
   std::unique_ptr<ExprAST> rhs;
@@ -175,8 +174,8 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// BinaryExprAST - Expression class for a binary operator.
-// BinaryExprAST - 二項演算子のための式クラス。
+//! \brief Expression class for a binary operator.
+//! \brief 二項演算子のための式クラス。
 class BinaryExprAST : public ExprAST {
 public:
   const std::unique_ptr<ExprAST> lhs, rhs;
@@ -189,7 +188,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// ConditionalExprAST - Expression class for a conditinal operator.
+//! \brief Expression class for a conditinal operator.
 class ConditionalExprAST : public ExprAST {
 public:
   const std::unique_ptr<ExprAST> cond, lhs, rhs;
@@ -203,7 +202,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// AssignExprAST
+//! \brief Expression class for a assignment.
 class AssignExprAST : public ExprAST {
 public:
   const std::unique_ptr<ExprAST> lhs, rhs;
@@ -221,9 +220,9 @@ public:
 static std::unique_ptr<ExprAST> primary_expression(std::list<Token> *tokens);
 static std::unique_ptr<ExprAST> expression(std::list<Token> *tokens);
 
-/*-----------------------------------------------------------------------------
-unary_expression
-*/
+/*!----------------------------------------------------------------------------
+\brief create unary_expression AST from tokens
+ */
 static std::unique_ptr<ExprAST> unary_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
   Type op = tokens->front().type;
@@ -467,8 +466,13 @@ binary_expression(std::list<Token> *tokens, std::unique_ptr<ExprAST> lhs) {
     return logical_or_expression(tokens, std::move(lhs));
 }
 #else
-/*-----------------------------------------------------------------------------
-binary_expression
+/*!----------------------------------------------------------------------------
+\brief create unary expression AST from tokens
+
+<binary_expression>
+    ::= <unary_expression>
+    | <binary_expression> binop <binary_expression>
+
 */
 static std::unique_ptr<ExprAST>
 binary_expression(std::list<Token> *tokens, std::unique_ptr<ExprAST> lhs) {
@@ -501,16 +505,13 @@ binary_expression(std::list<Token> *tokens, std::unique_ptr<ExprAST> lhs) {
 }
 #endif
 
-/*-----------------------------------------------------------------------------
-conditional_expression
-<conditional-expression> ::= <logical-or-expression>
-                           | <logical-or-expression> ? <expression> :
-<conditional-expression>
-<conditional-expression> ::= <binary_expression>
-                           | <binary_expression> ? <expression> :
-<conditional-expression>
+/*!----------------------------------------------------------------------------
+\brief create unary expression AST from tokens
 
-*/
+<conditional-expression>
+    ::= <binary_expression>
+    | <binary_expression> ? <expression> : <conditional-expression>
+ */
 static std::unique_ptr<ExprAST>
 conditional_expression(std::list<Token> *tokens,
                        std::unique_ptr<ExprAST> cond) {
@@ -540,12 +541,14 @@ conditional_expression(std::list<Token> *tokens,
   throw expr_error("expected ':'\n");
 
   return lhs;
-}
+} // namespace expr
 
-/*-----------------------------------------------------------------------------
-assignment_expression
-        : unary_expression assignment_operator assignment_expression
-        | conditional_expression
+/*!----------------------------------------------------------------------------
+\brief create assignment expression AST from tokens
+
+<assignment_expression>
+    ::= <unary_expression> <assignment_operator> <assignment_expression>
+    | <conditional_expression>
 */
 static std::unique_ptr<ExprAST>
 assignment_expression(std::list<Token> *tokens, std::unique_ptr<ExprAST> lhs) {
@@ -569,19 +572,20 @@ assignment_expression(std::list<Token> *tokens, std::unique_ptr<ExprAST> lhs) {
       std::make_unique<AssignExprAST>(opc, std::move(lhs), std::move(rhs)));
 }
 
-/*-----------------------------------------------------------------------------
-expression
-: equality_expression
+/*!----------------------------------------------------------------------------
+\brief create expression AST from tokens
+
+<expression> ::= <equality_expression>
 */
 static std::unique_ptr<ExprAST> expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
-  //	return conditional_expression(tokens, nullptr);
   return assignment_expression(tokens, nullptr);
 }
 
-/*-----------------------------------------------------------------------------
-integer_expression (terminate)
-: number
+/*!----------------------------------------------------------------------------
+\brief create integer_expression(terminate) from tokens
+
+<integer_expression> ::= <number>
 */
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
@@ -602,9 +606,10 @@ static std::unique_ptr<ExprAST> integer_expression(std::list<Token> *tokens) {
   return std::move(Result);
 }
 
-/*-----------------------------------------------------------------------------
-variable_expression (terminate)
-: variable
+/*!----------------------------------------------------------------------------
+\brief create variable_expression(terminate) from tokens
+
+<variable_expression> ::= <variable>
 */
 static std::unique_ptr<ExprAST> variable_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
@@ -614,10 +619,12 @@ static std::unique_ptr<ExprAST> variable_expression(std::list<Token> *tokens) {
   return std::move(Result);
 }
 
-/*-----------------------------------------------------------------------------
-primary_expression
-: integer_expression　(terminate)
-| PARL expression PARR
+/*!----------------------------------------------------------------------------
+\brief primary_expression from tokens
+
+<primary_expression>
+    ::= <integer_expression>　(terminate)
+    | ( <expression> )
 */
 static std::unique_ptr<ExprAST> primary_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
@@ -662,7 +669,7 @@ std::unique_ptr<ExprAST> parser(std::list<Token> *tokens) {
   return nullptr;
 }
 
-//! brief visitor to evalute expression AST
+//! \brief visitor to evalute expression AST
 class EvalExprVisitor : public ExprVisitor {
 public:
   int val{};
