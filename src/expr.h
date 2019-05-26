@@ -129,7 +129,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-//! exception ailias 
+//! exception ailias
 using expr_error = std::runtime_error;
 
 // class expr_error : public std::runtime_error {

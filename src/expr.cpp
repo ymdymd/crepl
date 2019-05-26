@@ -87,12 +87,11 @@ std::list<Token> lexer(const std::string &line) {
     }
 
     Token token;
-    size_t i;
-    for (i = 0; i < keywords.size(); i++) {
-      if (regex_search(itr, ite, m, std::regex(keywords[i].str))) {
+    for (const auto &keyword : keywords) {
+      if (regex_search(itr, ite, m, std::regex(keyword.str))) {
         itr = m[0].second;
         token.str = m[0];
-        token.type = keywords[i].type;
+        token.type = keyword.type;
         break;
       }
     }
