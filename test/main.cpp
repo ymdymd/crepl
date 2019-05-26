@@ -305,6 +305,8 @@ int main(int argc, char **argv) {
   //--gtest_break_on_failure
   testing::GTEST_FLAG(break_on_failure) = true;
 #endif
+  ::testing::GTEST_FLAG(filter) = "value*";
+
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

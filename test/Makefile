@@ -24,6 +24,7 @@ COV_DIR := ./coverage
 SRCS := $(SRC_DIR)/expr.cpp
 SRCS += $(GTEST_DIR)/src/gtest-all.cc
 SRCS += main.cpp
+SRCS += test_value.cpp
 
 VPATH := $(SRC_DIR)
 VPATH += $(GTEST_DIR)/src
