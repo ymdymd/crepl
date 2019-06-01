@@ -187,6 +187,31 @@ public:
     return lhs;
   }
 
+  friend Value operator==(const Value &lhs, const Value &rhs) {
+    return compare<std::equal_to<int>, std::equal_to<float>>(lhs, rhs);
+  }
+
+  friend Value operator!=(const Value &lhs, const Value &rhs) {
+    return compare<std::not_equal_to<int>, std::not_equal_to<float>>(lhs, rhs);
+  }
+
+  friend Value operator>(const Value &lhs, const Value &rhs) {
+    return compare<std::greater<int>, std::greater<float>>(lhs, rhs);
+  }
+
+  friend Value operator>=(const Value &lhs, const Value &rhs) {
+    return compare<std::greater_equal<int>, std::greater_equal<float>>(lhs,
+                                                                       rhs);
+  }
+
+  friend Value operator<(const Value &lhs, const Value &rhs) {
+    return compare<std::less<int>, std::less<float>>(lhs, rhs);
+  }
+
+  friend Value operator<=(const Value &lhs, const Value &rhs) {
+    return compare<std::less_equal<int>, std::less_equal<float>>(lhs, rhs);
+  }
+
 private:
   union {
     int32_t si32;
@@ -220,6 +245,31 @@ private:
       const auto rval = rhs.get<float>();
       const auto val = FF()(lval, rval);
       set(val);
+    }
+  }
+
+  template <typename FI, typename FF>
+  static Value compare(const Value &lhs, const Value &rhs) {
+    if (lhs.is<int>() && rhs.is<int>()) {
+      const auto lval = lhs.get<int>();
+      const auto rval = rhs.get<int>();
+      const auto val = FI()(lval, rval);
+      return Value(val);
+    } else if (lhs.is<float>() && rhs.is<int>()) {
+      const auto lval = lhs.get<float>();
+      const auto rval = static_cast<float>(rhs.get<int>());
+      const auto val = FF()(lval, rval);
+      return Value(val);
+    } else if (lhs.is<int>() && rhs.is<float>()) {
+      const auto lval = static_cast<float>(lhs.get<int>());
+      const auto rval = rhs.get<float>();
+      const auto val = FF()(lval, rval);
+      return Value(val);
+    } else {
+      const auto lval = lhs.get<float>();
+      const auto rval = rhs.get<float>();
+      const auto val = FF()(lval, rval);
+      return Value(val);
     }
   }
 

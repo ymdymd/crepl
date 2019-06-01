@@ -338,3 +338,135 @@ TEST(value, xor) {
   test_xor_invalid<float, int>();
   test_xor_invalid<float, float>();
 }
+
+template <typename TL, typename TR> //
+static void test_cmpeq() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval == rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs == rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmpeq) {
+  SCOPED_TRACE("");
+  test_cmpeq<int, int>();
+  test_cmpeq<int, float>();
+  test_cmpeq<float, int>();
+  test_cmpeq<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_cmpne() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval != rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs != rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmpne) {
+  SCOPED_TRACE("");
+  test_cmpne<int, int>();
+  test_cmpne<int, float>();
+  test_cmpne<float, int>();
+  test_cmpne<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_cmpgt() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval > rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs > rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmpgt) {
+  SCOPED_TRACE("");
+  test_cmpgt<int, int>();
+  test_cmpgt<int, float>();
+  test_cmpgt<float, int>();
+  test_cmpgt<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_cmpge() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval >= rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs >= rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmpge) {
+  SCOPED_TRACE("");
+  test_cmpge<int, int>();
+  test_cmpge<int, float>();
+  test_cmpge<float, int>();
+  test_cmpge<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_cmplt() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval < rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs < rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmplt) {
+  SCOPED_TRACE("");
+  test_cmplt<int, int>();
+  test_cmplt<int, float>();
+  test_cmplt<float, int>();
+  test_cmplt<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_cmple() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(3.0f);
+  auto expected = lval <= rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs <= rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, cmple) {
+  SCOPED_TRACE("");
+  test_cmple<int, int>();
+  test_cmple<int, float>();
+  test_cmple<float, int>();
+  test_cmple<float, float>();
+}
