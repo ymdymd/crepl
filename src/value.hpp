@@ -14,7 +14,7 @@ namespace expr {
 //=============================================================================
 //! \brief value class
 class Value {
-public:
+private:
   union {
     int32_t si32;
     float fp32;
@@ -25,11 +25,7 @@ public:
     TY_FP32,
   } type;
 
-//   Value() {
-//     data.si32 = 0;
-//     type = TY_SI32;
-//   }
-
+public:
   explicit Value(int32_t val) {
     data.si32 = val;
     type = TY_SI32;
@@ -38,6 +34,60 @@ public:
   explicit Value(float val) {
     data.fp32 = val;
     type = TY_FP32;
+  }
+
+  //! is value integer?
+  template <typename T,
+            typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
+  bool is() {
+    return type == TY_SI32;
+  }
+
+  //! is value float?
+  template <typename T, typename std::enable_if_t<
+                            std::is_floating_point<T>::value, int> = 0>
+  bool is() {
+    return type == TY_FP32;
+  }
+
+  //! get integer value if type is integer
+  template <typename T,
+            typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
+  T get() {
+    if (!is<T>()) {
+      throw;
+    }
+    return data.si32;
+  }
+
+  //! get float value if type is integer
+  template <typename T, typename std::enable_if_t<
+                            std::is_floating_point<T>::value, int> = 0>
+  T get() {
+    if (!is<T>()) {
+      throw;
+    }
+    return data.fp32;
+  }
+
+  //! cast to integer type
+  template <typename T,
+            typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
+  Value cast() {
+    if (is<float>()) {
+      return Value(static_cast<T>(get<float>()));
+    }
+    return *this;
+  }
+
+  //! cast to float type
+  template <typename T, typename std::enable_if_t<
+                            std::is_floating_point<T>::value, int> = 0>
+  Value cast() {
+    if (is<int>()) {
+      return Value(static_cast<T>(get<int>()));
+    }
+    return *this;
   }
 
   Value &operator+=(const Value &rhs) {
