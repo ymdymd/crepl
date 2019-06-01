@@ -112,6 +112,21 @@ public:
     return *this;
   }
 
+  Value &operator&=(const Value &rhs) {
+    assignment_operator<std::bit_and<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
+  Value &operator|=(const Value &rhs) {
+    assignment_operator<std::bit_or<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
+  Value &operator^=(const Value &rhs) {
+    assignment_operator<std::bit_xor<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
   friend Value operator+(Value lhs, const Value &rhs) {
     lhs += rhs;
     return lhs;
@@ -134,6 +149,21 @@ public:
 
   friend Value operator%(Value lhs, const Value &rhs) {
     lhs %= rhs;
+    return lhs;
+  }
+
+  friend Value operator&(Value lhs, const Value &rhs) {
+    lhs &= rhs;
+    return lhs;
+  }
+
+  friend Value operator|(Value lhs, const Value &rhs) {
+    lhs |= rhs;
+    return lhs;
+  }
+
+  friend Value operator^(Value lhs, const Value &rhs) {
+    lhs ^= rhs;
     return lhs;
   }
 

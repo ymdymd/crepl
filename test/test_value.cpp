@@ -180,3 +180,94 @@ TEST(value, mod) {
   test_mod_invalid<float, int>();
   test_mod_invalid<float, float>();
 }
+
+template <typename TL, typename TR> //
+static void test_and() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  auto expected = lval & rval;
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs & rhs;
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TL, typename TR> //
+static void test_and_invalid() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  Value lhs(lval);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = lhs & rhs;);
+}
+
+TEST(value, and) {
+  SCOPED_TRACE("");
+  test_and<int, int>();
+  test_and_invalid<int, float>();
+  test_and_invalid<float, int>();
+  test_and_invalid<float, float>();
+}
+
+
+template <typename TL, typename TR> //
+static void test_or() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  auto expected = lval | rval;
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs | rhs;
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TL, typename TR> //
+static void test_or_invalid() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  Value lhs(lval);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = lhs | rhs;);
+}
+
+TEST(value, or) {
+  SCOPED_TRACE("");
+  test_or<int, int>();
+  test_or_invalid<int, float>();
+  test_or_invalid<float, int>();
+  test_or_invalid<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_xor() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  auto expected = lval ^ rval;
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs ^ rhs;
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TL, typename TR> //
+static void test_xor_invalid() {
+  auto lval = static_cast<TL>(0xdeadbeaf);
+  auto rval = static_cast<TR>(0xcafebabe);
+  Value lhs(lval);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = lhs ^ rhs;);
+}
+
+TEST(value, xor) {
+  SCOPED_TRACE("");
+  test_xor<int, int>();
+  test_xor_invalid<int, float>();
+  test_xor_invalid<float, int>();
+  test_xor_invalid<float, float>();
+}
