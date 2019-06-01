@@ -59,93 +59,90 @@ TEST(value, cast_f2f) {
   ASSERT_EQ(expect_val, res.get<float>());
 }
 
+template <typename TL, typename TR> //
+static void test_add() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(2.18f);
+  auto expected = lval + rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs + rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
 TEST(value, add) {
-  const int lval = 1;
-  const int rval = 1;
-  auto expect_val = lval + rval;
-
-  Value lhs(lval);
-  Value rhs(rval);
-  auto res = lhs + rhs;
-
-  ASSERT_TRUE(res.is<int>());
-  ASSERT_EQ(expect_val, res.get<int>());
+  SCOPED_TRACE("");
+  test_add<int, int>();
+  test_add<int, float>();
+  test_add<float, int>();
+  test_add<float, float>();
 }
 
-TEST(value, add_fp32_fp32) {
-  const float lval = 3.14f;
-  const float rval = 2.18f;
-  auto expect_val = lval + rval;
-
-  Value lhs(lval);
-  Value rhs(rval);
-  auto res = lhs + rhs;
-
-  ASSERT_TRUE(res.is<float>());
-  ASSERT_EQ(expect_val, res.get<float>());
-}
-
-TEST(value, add_fp32_si32) {
-  const float lval = 3.14f;
-  const int rval = 1;
-  auto expect_val = lval + rval;
-
-  Value lhs(lval);
-  Value rhs(rval);
-  auto res = lhs + rhs;
-
-  ASSERT_TRUE(res.is<float>());
-  ASSERT_EQ(expect_val, res.get<float>());
-}
-
-TEST(value, add_si32_fp32) {
-  const int lval = 3;
-  const float rval = 2.718f;
-  const float expect_val = lval + rval;
-
-  Value lhs(lval);
-  Value rhs(rval);
-  auto res = lhs + rhs;
-
-  ASSERT_TRUE(res.is<float>());
-  ASSERT_EQ(expect_val, res.get<float>());
-}
-
-TEST(value, sub) {
-  const int lval = 3;
-  const int rval = 5;
-  auto expect_val = lval - rval;
+template <typename TL, typename TR> //
+static void test_sub() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(2.18f);
+  auto expected = lval - rval;
 
   Value lhs(lval);
   Value rhs(rval);
   auto res = lhs - rhs;
 
-  ASSERT_TRUE(res.is<int>());
-  ASSERT_EQ(expect_val, res.get<int>());
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
 }
 
-TEST(value, mul) {
-  const int lval = 3;
-  const int rval = 4;
-  auto expect_val = lval * rval;
+TEST(value, sub) {
+  SCOPED_TRACE("");
+  test_sub<int, int>();
+  test_sub<int, float>();
+  test_sub<float, int>();
+  test_sub<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_mul() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(2.18f);
+  auto expected = lval * rval;
 
   Value lhs(lval);
   Value rhs(rval);
   auto res = lhs * rhs;
 
-  ASSERT_TRUE(res.is<int>());
-  ASSERT_EQ(expect_val, res.get<int>());
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
 }
 
-TEST(value, div) {
-  const int lval = 10;
-  const int rval = 3;
-  auto expect_val = lval / rval;
+TEST(value, mul) {
+  SCOPED_TRACE("");
+  test_mul<int, int>();
+  test_mul<int, float>();
+  test_mul<float, int>();
+  test_mul<float, float>();
+}
+
+template <typename TL, typename TR> //
+static void test_div() {
+  auto lval = static_cast<TL>(3.14f);
+  auto rval = static_cast<TR>(2.18f);
+  auto expected = lval / rval;
 
   Value lhs(lval);
   Value rhs(rval);
   auto res = lhs / rhs;
 
-  ASSERT_TRUE(res.is<int>());
-  ASSERT_EQ(expect_val, res.get<int>());
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, div) {
+  SCOPED_TRACE("");
+  test_div<int, int>();
+  test_div<int, float>();
+  test_div<float, int>();
+  test_div<float, float>();
 }
