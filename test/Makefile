@@ -23,8 +23,7 @@ COV_DIR := ./coverage
 
 SRCS := $(SRC_DIR)/expr.cpp
 SRCS += $(GTEST_DIR)/src/gtest-all.cc
-SRCS += main.cpp
-SRCS += test_value.cpp
+SRCS += $(wildcard *.cpp)
 
 VPATH := $(SRC_DIR)
 VPATH += $(GTEST_DIR)/src
@@ -99,9 +98,9 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
-.PHONY: format
-format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
-	clang-format -i $^
+# .PHONY: format
+# format:	$(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.h -or -name *.hpp)
+# 	clang-format -i $^
 
 .PHONY: cov
 cov: run
