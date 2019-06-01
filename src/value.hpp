@@ -14,46 +14,41 @@ namespace expr {
 //=============================================================================
 //! \brief value class
 class Value {
-private:
-  union {
-    int32_t si32;
-    float fp32;
-  } data;
-
-  enum Type {
-    TY_SI32,
-    TY_FP32,
-  } type;
-
 public:
-  explicit Value(int32_t val) {
-    data.si32 = val;
-    type = TY_SI32;
-  }
+  explicit Value(int32_t val) { set(val); }
 
-  explicit Value(float val) {
-    data.fp32 = val;
-    type = TY_FP32;
-  }
+  explicit Value(float val) { set(val); }
 
   //! is value integer?
   template <typename T,
             typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
-  bool is() {
+  bool is() const {
     return type == TY_SI32;
   }
 
   //! is value float?
   template <typename T, typename std::enable_if_t<
                             std::is_floating_point<T>::value, int> = 0>
-  bool is() {
+  bool is() const {
     return type == TY_FP32;
+  }
+
+  //! set integer value
+  void set(int val) {
+    data.si32 = val;
+    type = TY_SI32;
+  }
+
+  //! set float value
+  void set(float val) {
+    data.fp32 = val;
+    type = TY_FP32;
   }
 
   //! get integer value if type is integer
   template <typename T,
             typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
-  T get() {
+  T get() const {
     if (!is<T>()) {
       throw;
     }
@@ -63,7 +58,7 @@ public:
   //! get float value if type is integer
   template <typename T, typename std::enable_if_t<
                             std::is_floating_point<T>::value, int> = 0>
-  T get() {
+  T get() const {
     if (!is<T>()) {
       throw;
     }
@@ -73,7 +68,7 @@ public:
   //! cast to integer type
   template <typename T,
             typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
-  Value cast() {
+  Value cast() const {
     if (is<float>()) {
       return Value(static_cast<T>(get<float>()));
     }
@@ -83,7 +78,7 @@ public:
   //! cast to float type
   template <typename T, typename std::enable_if_t<
                             std::is_floating_point<T>::value, int> = 0>
-  Value cast() {
+  Value cast() const {
     if (is<int>()) {
       return Value(static_cast<T>(get<int>()));
     }
@@ -91,114 +86,22 @@ public:
   }
 
   Value &operator+=(const Value &rhs) {
-    const auto lty = type;
-    const auto rty = rhs.type;
-
-    if ((lty == TY_SI32) && (rty == TY_SI32)) {
-      const auto lval = data.si32;
-      const auto rval = rhs.data.si32;
-      (*this).data.si32 = lval + rval;
-      (*this).type = TY_SI32;
-    } else if ((lty == TY_FP32) && (rty == TY_SI32)) {
-      const auto lval = data.fp32;
-      const auto rval = static_cast<float>(rhs.data.si32);
-      (*this).data.fp32 = lval + rval;
-      (*this).type = TY_FP32;
-    } else if ((lty == TY_SI32) && (rty == TY_FP32)) {
-      const auto lval = static_cast<float>(data.si32);
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval + rval;
-      (*this).type = TY_FP32;
-    } else {
-      const auto lval = data.fp32;
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval + rval;
-      (*this).type = TY_FP32;
-    }
+    assignment_operator<std::plus<int>, std::plus<float>>(rhs);
     return *this;
   }
 
   Value &operator-=(const Value &rhs) {
-    const auto lty = type;
-    const auto rty = rhs.type;
-
-    if ((lty == TY_SI32) && (rty == TY_SI32)) {
-      const auto lval = data.si32;
-      const auto rval = rhs.data.si32;
-      (*this).data.si32 = lval - rval;
-      (*this).type = TY_SI32;
-    } else if ((lty == TY_FP32) && (rty == TY_SI32)) {
-      const auto lval = data.fp32;
-      const auto rval = static_cast<float>(rhs.data.si32);
-      (*this).data.fp32 = lval - rval;
-      (*this).type = TY_FP32;
-    } else if ((lty == TY_SI32) && (rty == TY_FP32)) {
-      const auto lval = static_cast<float>(data.si32);
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval - rval;
-      (*this).type = TY_FP32;
-    } else {
-      const auto lval = data.fp32;
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval - rval;
-      (*this).type = TY_FP32;
-    }
+    assignment_operator<std::minus<int>, std::minus<float>>(rhs);
     return *this;
   }
 
   Value &operator*=(const Value &rhs) {
-    const auto lty = type;
-    const auto rty = rhs.type;
-
-    if ((lty == TY_SI32) && (rty == TY_SI32)) {
-      const auto lval = data.si32;
-      const auto rval = rhs.data.si32;
-      (*this).data.si32 = lval * rval;
-      (*this).type = TY_SI32;
-    } else if ((lty == TY_FP32) && (rty == TY_SI32)) {
-      const auto lval = data.fp32;
-      const auto rval = static_cast<float>(rhs.data.si32);
-      (*this).data.fp32 = lval * rval;
-      (*this).type = TY_FP32;
-    } else if ((lty == TY_SI32) && (rty == TY_FP32)) {
-      const auto lval = static_cast<float>(data.si32);
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval * rval;
-      (*this).type = TY_FP32;
-    } else {
-      const auto lval = data.fp32;
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval * rval;
-      (*this).type = TY_FP32;
-    }
+    assignment_operator<std::multiplies<int>, std::multiplies<float>>(rhs);
     return *this;
   }
 
   Value &operator/=(const Value &rhs) {
-    const auto lty = type;
-    const auto rty = rhs.type;
-
-    if ((lty == TY_SI32) && (rty == TY_SI32)) {
-      const auto lval = data.si32;
-      const auto rval = rhs.data.si32;
-      (*this).data.si32 = lval / rval;
-      (*this).type = TY_SI32;
-    } else if ((lty == TY_FP32) && (rty == TY_SI32)) {
-      const auto lval = data.fp32;
-      const auto rval = static_cast<float>(rhs.data.si32);
-      (*this).data.fp32 = lval / rval;
-      (*this).type = TY_FP32;
-    } else if ((lty == TY_SI32) && (rty == TY_FP32)) {
-      const auto lval = static_cast<float>(data.si32);
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval / rval;
-      (*this).type = TY_FP32;
-    } else {
-      const auto lval = data.fp32;
-      const auto rval = rhs.data.fp32;
-      (*this).data.fp32 = lval / rval;
-      (*this).type = TY_FP32;
-    }
+    assignment_operator<std::divides<int>, std::divides<float>>(rhs);
     return *this;
   }
 
@@ -220,6 +123,42 @@ public:
   friend Value operator/(Value lhs, const Value &rhs) {
     lhs /= rhs;
     return lhs;
+  }
+
+private:
+  union {
+    int32_t si32;
+    float fp32;
+  } data;
+
+  enum Type {
+    TY_SI32,
+    TY_FP32,
+  } type;
+
+  template <typename FI, typename FF>
+  void assignment_operator(const Value &rhs) {
+    if (is<int>() && rhs.is<int>()) {
+      const auto lval = get<int>();
+      const auto rval = rhs.get<int>();
+      const auto val = FI()(lval, rval);
+      set(val);
+    } else if (is<float>() && rhs.is<int>()) {
+      const auto lval = get<float>();
+      const auto rval = static_cast<float>(rhs.get<int>());
+      const auto val = FF()(lval, rval);
+      set(val);
+    } else if (is<int>() && rhs.is<float>()) {
+      const auto lval = static_cast<float>(get<int>());
+      const auto rval = rhs.get<float>();
+      const auto val = FF()(lval, rval);
+      set(val);
+    } else {
+      const auto lval = get<float>();
+      const auto rval = rhs.get<float>();
+      const auto val = FF()(lval, rval);
+      set(val);
+    }
   }
 };
 
