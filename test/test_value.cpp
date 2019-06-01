@@ -146,3 +146,37 @@ TEST(value, div) {
   test_div<float, int>();
   test_div<float, float>();
 }
+
+template <typename TL, typename TR> //
+static void test_mod() {
+  auto lval = static_cast<TL>(10);
+  auto rval = static_cast<TR>(3);
+  auto expected = lval % rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  auto res = lhs % rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TL, typename TR> //
+static void test_mod_invalid() {
+  auto lval = static_cast<TL>(10);
+  auto rval = static_cast<TR>(3);
+  // auto expected = lval % rval;
+
+  Value lhs(lval);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = lhs % rhs;);
+}
+
+TEST(value, mod) {
+  SCOPED_TRACE("");
+  test_mod<int, int>();
+  test_mod_invalid<int, float>();
+  test_mod_invalid<float, int>();
+  test_mod_invalid<float, float>();
+}

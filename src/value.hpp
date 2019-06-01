@@ -15,6 +15,8 @@ namespace expr {
 //! \brief value class
 class Value {
 public:
+  explicit Value() { set(0); }
+
   explicit Value(int32_t val) { set(val); }
 
   explicit Value(float val) { set(val); }
@@ -105,6 +107,11 @@ public:
     return *this;
   }
 
+  Value &operator%=(const Value &rhs) {
+    assignment_operator<std::modulus<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
   friend Value operator+(Value lhs, const Value &rhs) {
     lhs += rhs;
     return lhs;
@@ -122,6 +129,11 @@ public:
 
   friend Value operator/(Value lhs, const Value &rhs) {
     lhs /= rhs;
+    return lhs;
+  }
+
+  friend Value operator%(Value lhs, const Value &rhs) {
+    lhs %= rhs;
     return lhs;
   }
 
@@ -160,6 +172,14 @@ private:
       set(val);
     }
   }
+
+  template <typename T> struct invalid_operands {
+    T operator()(const T &lhs, const T &rhs) {
+      // std::cerr << "invalid operands to binary expression" <<std::endl;
+      throw std::runtime_error("invalid operands to binary expression");
+      return 0;
+    }
+  };
 };
 
 } // namespace expr
