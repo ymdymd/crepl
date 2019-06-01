@@ -112,6 +112,16 @@ public:
     return *this;
   }
 
+  Value &operator<<=(const Value &rhs) {
+    assignment_operator<shift_left<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
+  Value &operator>>=(const Value &rhs) {
+    assignment_operator<shift_right<int>, invalid_operands<float>>(rhs);
+    return *this;
+  }
+
   Value &operator&=(const Value &rhs) {
     assignment_operator<std::bit_and<int>, invalid_operands<float>>(rhs);
     return *this;
@@ -149,6 +159,16 @@ public:
 
   friend Value operator%(Value lhs, const Value &rhs) {
     lhs %= rhs;
+    return lhs;
+  }
+
+  friend Value operator<<(Value lhs, const Value &rhs) {
+    lhs <<= rhs;
+    return lhs;
+  }
+
+  friend Value operator>>(Value lhs, const Value &rhs) {
+    lhs >>= rhs;
     return lhs;
   }
 
@@ -209,6 +229,14 @@ private:
       throw std::runtime_error("invalid operands to binary expression");
       return 0;
     }
+  };
+
+  template <typename T> struct shift_left {
+    T operator()(const T &lhs, const T &rhs) { return lhs << rhs; }
+  };
+
+  template <typename T> struct shift_right {
+    T operator()(const T &lhs, const T &rhs) { return lhs >> rhs; }
   };
 };
 
