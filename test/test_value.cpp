@@ -181,6 +181,24 @@ TEST(value, mod) {
   test_mod_invalid<float, float>();
 }
 
+template <typename TR> //
+static void test_neg() {
+  auto rval = static_cast<TR>(2.18f);
+  auto expected = -rval;
+
+  Value rhs(rval);
+  auto res = -rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+TEST(value, neg) {
+  SCOPED_TRACE("");
+  test_neg<int>();
+  test_neg<float>();
+}
+
 template <typename TL, typename TR> //
 static void test_sl() {
   auto lval = static_cast<TL>(111);
@@ -339,6 +357,32 @@ TEST(value, xor) {
   test_xor_invalid<float, float>();
 }
 
+template <typename TR> //
+static void test_not() {
+  auto rval = static_cast<TR>(0xcafebabe);
+  auto expected = ~rval;
+
+  Value rhs(rval);
+  auto res = ~rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TR> //
+static void test_not_invalid() {
+  auto rval = static_cast<TR>(0xcafebabe);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = ~rhs;);
+}
+
+TEST(value, not) {
+  SCOPED_TRACE("");
+  test_not<int>();
+  test_not_invalid<float>();
+}
+
 template <typename TL, typename TR> //
 static void test_land() {
   auto lval = static_cast<TL>(true);
@@ -397,6 +441,32 @@ TEST(value, lor) {
   test_lor_invalid<int, float>();
   test_lor_invalid<float, int>();
   test_lor_invalid<float, float>();
+}
+
+template <typename TR> //
+static void test_lnot() {
+  auto rval = static_cast<TR>(true);
+  auto expected = !rval;
+
+  Value rhs(rval);
+  auto res = !rhs;
+
+  ASSERT_TRUE(res.is<decltype(expected)>());
+  ASSERT_EQ(expected, res.get<decltype(expected)>());
+}
+
+template <typename TR> //
+static void test_lnot_invalid() {
+  auto rval = static_cast<TR>(true);
+  Value rhs(rval);
+  Value res;
+  ASSERT_ANY_THROW(res = !rhs;);
+}
+
+TEST(value, lnot) {
+  SCOPED_TRACE("");
+  test_lnot<int>();
+  test_lnot_invalid<float>();
 }
 
 template <typename TL, typename TR> //

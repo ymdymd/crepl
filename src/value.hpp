@@ -137,6 +137,20 @@ public:
     return *this;
   }
 
+  Value operator+() const { return *this; }
+
+  Value operator-() const {
+    return unary_operator<std::negate<int>, std::negate<float>>(*this);
+  }
+
+  Value operator~() const {
+    return unary_operator<std::bit_not<int>, invalid_operand<float>>(*this);
+  }
+
+  Value operator!() const {
+    return unary_operator<std::logical_not<int>, invalid_operand<float>>(*this);
+  }
+
   friend Value operator+(const Value &lhs, const Value &rhs) {
     return binary_operator< //
         std::plus<int>, std::plus<float>>(lhs, rhs);
@@ -263,8 +277,29 @@ private:
     }
   }
 
+  template <typename FI, typename FF>
+  static Value unary_operator(const Value &rhs) {
+    if (rhs.is<int>()) {
+      const auto rval = rhs.get<int>();
+      const auto val = FI()(rval);
+      return Value(val);
+    } else {
+      const auto rval = rhs.get<float>();
+      const auto val = FF()(rval);
+      return Value(val);
+    }
+  }
+
   template <typename T> struct invalid_operands {
     T operator()(const T &lhs, const T &rhs) {
+      // std::cerr << "invalid operands to binary expression" <<std::endl;
+      throw std::runtime_error("invalid operands to binary expression");
+      return 0;
+    }
+  };
+
+  template <typename T> struct invalid_operand {
+    T operator()(const T &rhs) {
       // std::cerr << "invalid operands to binary expression" <<std::endl;
       throw std::runtime_error("invalid operands to binary expression");
       return 0;
