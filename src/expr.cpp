@@ -144,8 +144,8 @@ public:
 //! \brief "1"のような整数数値リテラルのための式クラス。
 class IntegerExprAST : public ExprAST {
 public:
-  const int Val;
-  explicit IntegerExprAST(int val) : ExprAST(IMM), Val(val) {}
+  const Value Val;
+  explicit IntegerExprAST(Value val) : ExprAST(IMM), Val(val) {}
   void accept(ExprVisitor *visitor) override { visitor->visit(*this); }
 };
 
@@ -588,7 +588,7 @@ static std::unique_ptr<ExprAST> expression(std::list<Token> *tokens) {
 */
 static std::unique_ptr<ExprAST> integer_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
-  int value = 0;
+  Value value(0);
   if (tokens->front().type == IMM) {
     value = std::stoi(tokens->front().str, nullptr, 0);
   } else if (tokens->front().type == IMMX) {
@@ -671,22 +671,22 @@ std::unique_ptr<ExprAST> parser(std::list<Token> *tokens) {
 //! \brief visitor to evalute expression AST
 class EvalExprVisitor : public ExprVisitor {
 public:
-  int val{};
+  Value val{};
 
 public:
-  explicit EvalExprVisitor(std::function<int &(const std::string &)> _fp)
+  explicit EvalExprVisitor(std::function<Value &(const std::string &)> _fp)
       : fp(std::move(_fp)) {}
   ~EvalExprVisitor() override = default;
 
   void visit(const IntegerExprAST &ast) override { val = ast.Val; }
 
   void visit(const VariableExprAST &ast) override {
-    val = fp ? fp(ast.Name) : 0;
+    val = fp ? fp(ast.Name) : Value(0);
   }
 
   void visit(const UnaryExprAST &ast) override {
     ast.rhs->accept(this);
-    int rhs = val;
+    Value rhs = val;
     switch (ast.type) {
     case (ADD):
       val = +rhs;
@@ -698,7 +698,7 @@ public:
       val = ~rhs;
       break;
     case (NOT):
-      val = static_cast<int>(rhs == 0);
+      val = !rhs;
       break;
     default:
       throw expr_error("unknown operator");
@@ -707,9 +707,9 @@ public:
 
   void visit(const BinaryExprAST &ast) override {
     ast.lhs->accept(this);
-    int lhs = val;
+    Value lhs = val;
     ast.rhs->accept(this);
-    int rhs = val;
+    Value rhs = val;
 
     switch (ast.type) {
     case (ADD):
@@ -737,10 +737,10 @@ public:
       val = lhs ^ rhs;
       break;
     case (LAND):
-      val = static_cast<int>((lhs != 0) && (rhs != 0));
+      val = lhs && rhs;
       break;
     case (LOR):
-      val = static_cast<int>((lhs != 0) || (rhs != 0));
+      val = lhs || rhs;
       break;
     case (SFTL):
       val = lhs << rhs;
@@ -749,22 +749,22 @@ public:
       val = lhs >> rhs;
       break;
     case (EQ):
-      val = static_cast<int>(lhs == rhs);
+      val = lhs == rhs;
       break;
     case (NE):
-      val = static_cast<int>(lhs != rhs);
+      val = lhs != rhs;
       break;
     case (LT):
-      val = static_cast<int>(lhs < rhs);
+      val = lhs < rhs;
       break;
     case (LE):
-      val = static_cast<int>(lhs <= rhs);
+      val = lhs <= rhs;
       break;
     case (GT):
-      val = static_cast<int>(lhs > rhs);
+      val = lhs > rhs;
       break;
     case (GE):
-      val = static_cast<int>(lhs >= rhs);
+      val = lhs >= rhs;
       break;
     default:
       throw expr_error("unknown operator");
@@ -773,20 +773,20 @@ public:
 
   void visit(const ConditionalExprAST &ast) override {
     ast.cond->accept(this);
-    int cond = val;
+    Value cond = val;
     ast.lhs->accept(this);
-    int lhs = val;
+    Value lhs = val;
     ast.rhs->accept(this);
-    int rhs = val;
-    val = cond != 0 ? lhs : rhs;
+    Value rhs = val;
+    val = cond.isNonZero() ? lhs : rhs;
   }
 
   void visit(const AssignExprAST &ast) override {
     ast.rhs->accept(this);
-    int rhs = val;
+    Value rhs = val;
 
     ast.lhs->accept(this);
-    int lhs = val;
+    Value lhs = val;
 
     switch (ast.type) {
     case (ASSIGN):
@@ -834,15 +834,15 @@ public:
     }
 
     auto *lhs_ast = dynamic_cast<VariableExprAST *>(ast.lhs.get());
-    int &lhs_ref = fp(lhs_ast->Name);
+    Value &lhs_ref = fp(lhs_ast->Name);
     lhs_ref = val = lhs;
   }
 
 private:
-  std::function<int &(const std::string &)> fp;
+  std::function<Value &(const std::string &)> fp;
 };
 
-int ExprAST::eval(std::function<int &(const std::string &)> fp) {
+Value ExprAST::eval(std::function<Value &(const std::string &)> fp) {
   auto evaluator = EvalExprVisitor(std::move(fp));
   accept(&evaluator);
   return evaluator.val;
@@ -857,8 +857,8 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str) {
 
 //=============================================================================
 // evalute expr_str
-int eval(const std::string &expr_str,
-         std::function<int &(const std::string &)> fp) {
+Value eval(const std::string &expr_str,
+         std::function<Value &(const std::string &)> fp) {
   return parser(expr_str)->eval(std::move(fp));
 }
 

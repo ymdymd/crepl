@@ -9,17 +9,36 @@
 #include <cstdint>
 #include <iostream>
 
+// Suppress warning -Wunused-parameter
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
 namespace expr {
 
 //=============================================================================
 //! \brief value class
 class Value {
 public:
-  explicit Value() { set(0); }
+  Value() { set(0); }
 
-  explicit Value(int32_t val) { set(val); }
+  Value(int val) { set(val); }
 
-  explicit Value(float val) { set(val); }
+  Value(float val) { set(val); }
+
+  Value &operator=(const int val) {
+    set(val);
+    return *this;
+  }
+
+  Value &operator=(const float val) {
+    set(val);
+    return *this;
+  }
+
+  //! is non zero value
+  bool isNonZero() const {
+    return data.si32 != 0;
+  }
 
   //! is value integer?
   template <typename T,
@@ -243,7 +262,7 @@ public:
 
 private:
   union {
-    int32_t si32;
+    int si32;
     float fp32;
   } data;
 
@@ -292,6 +311,8 @@ private:
 
   template <typename T> struct invalid_operands {
     T operator()(const T &lhs, const T &rhs) {
+      UNUSED(lhs);
+      UNUSED(rhs);
       // std::cerr << "invalid operands to binary expression" <<std::endl;
       throw std::runtime_error("invalid operands to binary expression");
       return 0;
@@ -300,6 +321,7 @@ private:
 
   template <typename T> struct invalid_operand {
     T operator()(const T &rhs) {
+      UNUSED(rhs);
       // std::cerr << "invalid operands to binary expression" <<std::endl;
       throw std::runtime_error("invalid operands to binary expression");
       return 0;

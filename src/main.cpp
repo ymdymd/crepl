@@ -1,4 +1,5 @@
 #include "expr.h"
+#include "value.hpp"
 #include "macro.h"
 #include <cstdio>
 #include <cstdlib>
@@ -61,20 +62,34 @@ static void help() {
 }
 
 //-----------------------------------------------------------------------------
-static void print(const std::map<std::string, int> &symbols) {
+static void print(const std::map<std::string, expr::Value> &symbols) {
   for (auto &itr : symbols) {
-    std::cout << itr.first << " = " << itr.second << "\n";
+    std::cout << itr.first << " = ";
+    if(itr.second.is<int>()){
+      std::cout << itr.second.get<int>();
+    }
+    if(itr.second.is<float>()){
+      std::cout << itr.second.get<float>();
+    }
+    std::cout << std::endl;
   }
 }
 
-static void eval(const std::string &line, std::map<std::string, int> *symbols) {
-  auto get_symbol_ref = [&](const std::string &symbol) -> int & {
+static void eval(const std::string &line, std::map<std::string, expr::Value> *symbols) {
+  auto get_symbol_ref = [&](const std::string &symbol) -> expr::Value &{
     return (*symbols)[symbol];
   };
 
   try {
-    int val = expr::eval(line, get_symbol_ref);
-    std::cout << format_str("(0x%08x) %d\n", val, val);
+    expr::Value val = expr::eval(line, get_symbol_ref);
+    if(val.is<int>()){
+      auto _val = val.get<int>();
+      std::cout << format_str("(0x%08x) %d\n", _val, _val);
+    }
+    if(val.is<float>()){
+      auto _val = val.get<float>();
+      std::cout << format_str("(0x%08x) %f\n", _val, _val);
+    }
   } catch (const std::runtime_error &e) {
     std::cout << e.what() << std::endl;
   }
@@ -86,7 +101,7 @@ int main(int argc, char **argv) {
   UNUSED(argc);
   UNUSED(argv);
   version();
-  std::map<std::string, int> symbols;
+  std::map<std::string, expr::Value> symbols;
 
 #ifdef USE_EDITLINE
   using_history();

@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "value.hpp"
 #include <functional>
 #include <list>
 #include <memory>
@@ -125,10 +126,10 @@ public:
   explicit ExprAST(const Type _type) : type(_type) {}
   virtual ~ExprAST() = default;
   virtual void accept(ExprVisitor *) = 0;
-  int eval(std::function<int &(const std::string &)> fp = nullptr);
+  Value eval(std::function<Value &(const std::string &)> fp = nullptr);
 };
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //! exception ailias
 using expr_error = std::runtime_error;
 
@@ -150,7 +151,7 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str);
 
 //-----------------------------------------------------------------------------
 //! evaluate expression string
-int eval(const std::string &expr_str,
-         std::function<int &(const std::string &)> fp = nullptr);
+Value eval(const std::string &expr_str,
+         std::function<Value &(const std::string &)> fp = nullptr);
 
 } // namespace expr
