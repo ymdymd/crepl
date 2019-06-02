@@ -88,128 +88,124 @@ public:
   }
 
   Value &operator+=(const Value &rhs) {
-    assignment_operator<std::plus<int>, std::plus<float>>(rhs);
+    *this = *this + rhs;
     return *this;
   }
 
   Value &operator-=(const Value &rhs) {
-    assignment_operator<std::minus<int>, std::minus<float>>(rhs);
+    *this = *this - rhs;
     return *this;
   }
 
   Value &operator*=(const Value &rhs) {
-    assignment_operator<std::multiplies<int>, std::multiplies<float>>(rhs);
+    *this = *this * rhs;
     return *this;
   }
 
   Value &operator/=(const Value &rhs) {
-    assignment_operator<std::divides<int>, std::divides<float>>(rhs);
+    *this = *this / rhs;
     return *this;
   }
 
   Value &operator%=(const Value &rhs) {
-    assignment_operator<std::modulus<int>, invalid_operands<float>>(rhs);
+    *this = *this % rhs;
     return *this;
   }
 
   Value &operator<<=(const Value &rhs) {
-    assignment_operator<shift_left<int>, invalid_operands<float>>(rhs);
+    *this = *this << rhs;
     return *this;
   }
 
   Value &operator>>=(const Value &rhs) {
-    assignment_operator<shift_right<int>, invalid_operands<float>>(rhs);
+    *this = *this >> rhs;
     return *this;
   }
 
   Value &operator&=(const Value &rhs) {
-    assignment_operator<std::bit_and<int>, invalid_operands<float>>(rhs);
+    *this = *this & rhs;
     return *this;
   }
 
   Value &operator|=(const Value &rhs) {
-    assignment_operator<std::bit_or<int>, invalid_operands<float>>(rhs);
+    *this = *this | rhs;
     return *this;
   }
 
   Value &operator^=(const Value &rhs) {
-    assignment_operator<std::bit_xor<int>, invalid_operands<float>>(rhs);
+    *this = *this ^ rhs;
     return *this;
   }
 
-  friend Value operator+(Value lhs, const Value &rhs) {
-    lhs += rhs;
-    return lhs;
+  friend Value operator+(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::plus<int>, std::plus<float>>(lhs, rhs);
   }
 
-  friend Value operator-(Value lhs, const Value &rhs) {
-    lhs -= rhs;
-    return lhs;
+  friend Value operator-(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::minus<int>, std::minus<float>>(lhs, rhs);
   }
 
-  friend Value operator*(Value lhs, const Value &rhs) {
-    lhs *= rhs;
-    return lhs;
+  friend Value operator*(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::multiplies<int>, std::multiplies<float>>(lhs,
+                                                                         rhs);
   }
 
-  friend Value operator/(Value lhs, const Value &rhs) {
-    lhs /= rhs;
-    return lhs;
+  friend Value operator/(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::divides<int>, std::divides<float>>(lhs, rhs);
   }
 
-  friend Value operator%(Value lhs, const Value &rhs) {
-    lhs %= rhs;
-    return lhs;
-  }
-
-  friend Value operator<<(Value lhs, const Value &rhs) {
-    lhs <<= rhs;
-    return lhs;
-  }
-
-  friend Value operator>>(Value lhs, const Value &rhs) {
-    lhs >>= rhs;
-    return lhs;
-  }
-
-  friend Value operator&(Value lhs, const Value &rhs) {
-    lhs &= rhs;
-    return lhs;
-  }
-
-  friend Value operator|(Value lhs, const Value &rhs) {
-    lhs |= rhs;
-    return lhs;
-  }
-
-  friend Value operator^(Value lhs, const Value &rhs) {
-    lhs ^= rhs;
-    return lhs;
-  }
-
-  friend Value operator==(const Value &lhs, const Value &rhs) {
-    return compare<std::equal_to<int>, std::equal_to<float>>(lhs, rhs);
-  }
-
-  friend Value operator!=(const Value &lhs, const Value &rhs) {
-    return compare<std::not_equal_to<int>, std::not_equal_to<float>>(lhs, rhs);
-  }
-
-  friend Value operator>(const Value &lhs, const Value &rhs) {
-    return compare<std::greater<int>, std::greater<float>>(lhs, rhs);
-  }
-
-  friend Value operator>=(const Value &lhs, const Value &rhs) {
-    return compare<std::greater_equal<int>, std::greater_equal<float>>(lhs,
+  friend Value operator%(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::modulus<int>, invalid_operands<float>>(lhs,
                                                                        rhs);
   }
 
+  friend Value operator<<(const Value &lhs, const Value &rhs) {
+    return binary_operator<shift_left<int>, invalid_operands<float>>(lhs, rhs);
+  }
+
+  friend Value operator>>(const Value &lhs, const Value &rhs) {
+    return binary_operator<shift_right<int>, invalid_operands<float>>(lhs, rhs);
+  }
+
+  friend Value operator&(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::bit_and<int>, invalid_operands<float>>(lhs,
+                                                                       rhs);
+  }
+
+  friend Value operator|(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::bit_or<int>, invalid_operands<float>>(lhs, rhs);
+  }
+
+  friend Value operator^(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::bit_xor<int>, invalid_operands<float>>(lhs,
+                                                                       rhs);
+  }
+
+  friend Value operator==(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::equal_to<int>, std::equal_to<float>>(lhs, rhs);
+  }
+
+  friend Value operator!=(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::not_equal_to<int>, std::not_equal_to<float>>(
+        lhs, rhs);
+  }
+
+  friend Value operator>(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::greater<int>, std::greater<float>>(lhs, rhs);
+  }
+
+  friend Value operator>=(const Value &lhs, const Value &rhs) {
+    return binary_operator<std::greater_equal<int>, std::greater_equal<float>>(
+        lhs, rhs);
+  }
+
   friend Value operator<(const Value &lhs, const Value &rhs) {
-    return compare<std::less<int>, std::less<float>>(lhs, rhs);
+    return binary_operator<std::less<int>, std::less<float>>(lhs, rhs);
   }
 
   friend Value operator<=(const Value &lhs, const Value &rhs) {
-    return compare<std::less_equal<int>, std::less_equal<float>>(lhs, rhs);
+    return binary_operator<std::less_equal<int>, std::less_equal<float>>(lhs,
+                                                                         rhs);
   }
 
 private:
@@ -224,32 +220,7 @@ private:
   } type;
 
   template <typename FI, typename FF>
-  void assignment_operator(const Value &rhs) {
-    if (is<int>() && rhs.is<int>()) {
-      const auto lval = get<int>();
-      const auto rval = rhs.get<int>();
-      const auto val = FI()(lval, rval);
-      set(val);
-    } else if (is<float>() && rhs.is<int>()) {
-      const auto lval = get<float>();
-      const auto rval = static_cast<float>(rhs.get<int>());
-      const auto val = FF()(lval, rval);
-      set(val);
-    } else if (is<int>() && rhs.is<float>()) {
-      const auto lval = static_cast<float>(get<int>());
-      const auto rval = rhs.get<float>();
-      const auto val = FF()(lval, rval);
-      set(val);
-    } else {
-      const auto lval = get<float>();
-      const auto rval = rhs.get<float>();
-      const auto val = FF()(lval, rval);
-      set(val);
-    }
-  }
-
-  template <typename FI, typename FF>
-  static Value compare(const Value &lhs, const Value &rhs) {
+  static Value binary_operator(const Value &lhs, const Value &rhs) {
     if (lhs.is<int>() && rhs.is<int>()) {
       const auto lval = lhs.get<int>();
       const auto rval = rhs.get<int>();
