@@ -36,12 +36,10 @@ public:
   }
 
   //! is non zero value
-  bool isNonZero() const {
-    return data.si32 != 0;
-  }
+  bool isNonZero() const { return data.si32 != 0; }
 
   //! is value integer?
-  template <typename T,
+  template <typename T, //
             typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
   bool is() const {
     return type == TY_SI32;
@@ -71,19 +69,24 @@ public:
             typename std::enable_if_t<std::is_integral<T>::value, int> = 0>
   T get() const {
     if (!is<T>()) {
-      throw;
+      std::runtime_error("value type is not integer");
     }
     return data.si32;
   }
 
-  //! get float value if type is integer
+  //! get float value if type is floating point
   template <typename T, typename std::enable_if_t<
                             std::is_floating_point<T>::value, int> = 0>
   T get() const {
     if (!is<T>()) {
-      throw;
+      std::runtime_error("value type is not floating point");
     }
     return data.fp32;
+  }
+
+  //! get raw value
+  unsigned int raw(){
+    return data.si32;
   }
 
   //! cast to integer type
@@ -258,6 +261,16 @@ public:
   friend Value operator<=(const Value &lhs, const Value &rhs) {
     return binary_operator< //
         std::less_equal<int>, std::less_equal<float>>(lhs, rhs);
+  }
+
+  friend std::ostream &operator<<(std::ostream &stream, const Value &val) {
+    if (val.is<int>()) {
+      stream << val.get<int>();
+    }
+    if (val.is<float>()) {
+      stream << val.get<float>();
+    }
+    return stream;
   }
 
 private:

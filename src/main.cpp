@@ -1,8 +1,9 @@
 #include "expr.h"
-#include "value.hpp"
 #include "macro.h"
+#include "value.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -17,17 +18,19 @@
 #include <editline/readline.h>
 #endif
 
+#define FMT08X std::setfill('0') << std::setw(8) << std::hex
+
 //-----------------------------------------------------------------------------
-#include <cstdarg>
-#include <utility>
-static std::string format_str(const char *fmt, ...) {
-  static char buf[2048];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  return std::string(buf);
-}
+// #include <cstdarg>
+// #include <utility>
+// static std::string format_str(const char *fmt, ...) {
+//   static char buf[2048];
+//   va_list args;
+//   va_start(args, fmt);
+//   vsnprintf(buf, sizeof(buf), fmt, args);
+//   va_end(args);
+//   return std::string(buf);
+// }
 
 //-----------------------------------------------------------------------------
 static void version() {
@@ -64,32 +67,20 @@ static void help() {
 //-----------------------------------------------------------------------------
 static void print(const std::map<std::string, expr::Value> &symbols) {
   for (auto &itr : symbols) {
-    std::cout << itr.first << " = ";
-    if(itr.second.is<int>()){
-      std::cout << itr.second.get<int>();
-    }
-    if(itr.second.is<float>()){
-      std::cout << itr.second.get<float>();
-    }
-    std::cout << std::endl;
+    std::cout << itr.first << " = " << itr.second << std::endl;
   }
 }
 
-static void eval(const std::string &line, std::map<std::string, expr::Value> *symbols) {
-  auto get_symbol_ref = [&](const std::string &symbol) -> expr::Value &{
+static void eval(const std::string &line,
+                 std::map<std::string, expr::Value> *symbols) {
+  auto get_symbol_ref = [&](const std::string &symbol) -> expr::Value & {
     return (*symbols)[symbol];
   };
 
   try {
     expr::Value val = expr::eval(line, get_symbol_ref);
-    if(val.is<int>()){
-      auto _val = val.get<int>();
-      std::cout << format_str("(0x%08x) %d\n", _val, _val);
-    }
-    if(val.is<float>()){
-      auto _val = val.get<float>();
-      std::cout << format_str("(0x%08x) %f\n", _val, _val);
-    }
+    std::cout << "(0x" << FMT08X << val.raw() << ") ";
+    std::cout << std::dec << val << std::endl;
   } catch (const std::runtime_error &e) {
     std::cout << e.what() << std::endl;
   }

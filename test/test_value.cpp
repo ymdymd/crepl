@@ -600,3 +600,25 @@ TEST(value, cmple) {
   test_cmple<float, int>();
   test_cmple<float, float>();
 }
+
+TEST(value, stream) {
+  {
+    int _val =12345;
+    std::stringstream ss_ref;
+    std::stringstream ss_dut;
+    Value val(_val);
+    ss_ref << _val;
+    ss_dut << val;
+    ASSERT_STREQ(ss_ref.str().c_str(), ss_dut.str().c_str());
+  }
+  {
+    float _val =3.141592f;
+    std::stringstream ss_ref;
+    std::stringstream ss_dut;
+    Value val(_val);
+    ss_ref << _val;
+    ss_dut << val;
+    ASSERT_STREQ(ss_ref.str().c_str(), ss_dut.str().c_str());
+  }
+
+}
