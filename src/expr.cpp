@@ -794,7 +794,7 @@ public:
     Value lhs = val;
     ast.rhs->accept(this);
     Value rhs = val;
-    val = cond.isNonZero() ? lhs : rhs;
+    val = cond ? lhs : rhs;
   }
 
   void visit(const AssignExprAST &ast) override {

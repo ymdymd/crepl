@@ -35,8 +35,8 @@ public:
     return *this;
   }
 
-  //! is non zero value
-  bool isNonZero() const { return data.si32 != 0; }
+  //! convert to bool expr
+  operator bool() const { return data.si32 != 0; }
 
   //! is value integer?
   template <typename T, //
