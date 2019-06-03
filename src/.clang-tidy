@@ -1,4 +1,4 @@
-Checks: '-*,modernize-*,readability-*,misc-*,performance-*, google-*'
+Checks: '-*,modernize-*,readability-*,misc-*,performance-*, google-readability-*'
 
 # check guidline
 #Checks: '-*,clang-analyzer-*,cppcoreguidelines-*'

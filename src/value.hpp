@@ -85,9 +85,7 @@ public:
   }
 
   //! get raw value
-  unsigned int raw(){
-    return data.si32;
-  }
+  unsigned int raw() { return data.si32; }
 
   //! cast to integer type
   template <typename T,
@@ -291,17 +289,20 @@ private:
       const auto rval = rhs.get<int>();
       const auto val = FI()(lval, rval);
       return Value(val);
-    } else if (lhs.is<float>() && rhs.is<int>()) {
+    }
+    if (lhs.is<float>() && rhs.is<int>()) {
       const auto lval = lhs.get<float>();
       const auto rval = static_cast<float>(rhs.get<int>());
       const auto val = FF()(lval, rval);
       return Value(val);
-    } else if (lhs.is<int>() && rhs.is<float>()) {
+    }
+    if (lhs.is<int>() && rhs.is<float>()) {
       const auto lval = static_cast<float>(lhs.get<int>());
       const auto rval = rhs.get<float>();
       const auto val = FF()(lval, rval);
       return Value(val);
-    } else {
+    }
+    {
       const auto lval = lhs.get<float>();
       const auto rval = rhs.get<float>();
       const auto val = FF()(lval, rval);
@@ -315,7 +316,8 @@ private:
       const auto rval = rhs.get<int>();
       const auto val = FI()(rval);
       return Value(val);
-    } else {
+    }
+    {
       const auto rval = rhs.get<float>();
       const auto val = FF()(rval);
       return Value(val);
