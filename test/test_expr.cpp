@@ -20,9 +20,12 @@ void test_lexer_helper(std::list<expr::Token> &expects) {
     str += ite->str;
   }
   auto tokens = expr::lexer(str);
+  // for(auto token : tokens){
+  //   std::cout << token.str << std::endl;
+  // }
   ASSERT_EQ(expects.size(), tokens.size());
-  for (auto ite = expects.begin(), ita = tokens.begin();
-       ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
+  for (auto ite = expects.begin(), ita = tokens.begin(); ite != expects.end() && ita != tokens.end();
+       ++ite, ++ita) {
     ASSERT_EQ(ite->type, ita->type);
     ASSERT_EQ(ite->str, ita->str);
   }
@@ -30,15 +33,18 @@ void test_lexer_helper(std::list<expr::Token> &expects) {
 
 //-----------------------------------------------------------------------------
 void test_lexer_helper(std::list<std::string> expects) {
+  SCOPED_TRACE(*expects.begin());
   std::string str;
   for (auto ite = expects.begin(); ite != expects.end(); ++ite) {
     str += *ite + " ";
   }
   auto tokens = expr::lexer(str);
+  // for(auto token : tokens){
+  //   std::cout << token.str << std::endl;
+  // }
   ASSERT_EQ(expects.size() + 1, tokens.size());
   auto ita = tokens.begin();
-  for (auto ite = expects.begin(); ite != expects.end() && ita != tokens.end();
-       ++ite, ++ita) {
+  for (auto ite = expects.begin(); ite != expects.end() && ita != tokens.end(); ++ite, ++ita) {
     ASSERT_EQ(*ite, ita->str);
   }
 }
@@ -49,13 +55,26 @@ TEST(lexer, words) {
   test_lexer_helper({"hoge"});
   test_lexer_helper({"20170630"});
   test_lexer_helper({"this", "is", "a", "pen"});
+  test_lexer_helper({"3.14"});
+  test_lexer_helper({"3."});
+  test_lexer_helper({".14"});
+  test_lexer_helper({"10e3"});
+  test_lexer_helper({"1.1e-3"});
 }
 
 //-----------------------------------------------------------------------------
 TEST(lexer, basic) {
   std::list<expr::Token> expects = {
-      {expr::IMM, "1"}, {expr::ADD, "+"}, {expr::IMM, "2"},
-      {expr::MUL, "*"}, {expr::IMM, "3"}, {expr::EOL, ""},
+      {expr::IMMI, "1"}, {expr::ADD, "+"},  {expr::IMMI, "2"},
+      {expr::MUL, "*"},  {expr::IMMI, "3"}, {expr::EOL, ""},
+  };
+  test_lexer_helper(expects);
+}
+
+TEST(lexer, basic_float) {
+  std::list<expr::Token> expects = {
+      {expr::IMMF, "1."}, {expr::ADD, "+"},    {expr::IMMF, ".1"},
+      {expr::MUL, "*"},   {expr::IMMF, "3.1"}, {expr::EOL, ""},
   };
   test_lexer_helper(expects);
 }
@@ -70,94 +89,134 @@ TEST(lexer, invalid_token) {
 //=============================================================================
 
 #define TO_STR(...) #__VA_ARGS__
-#define TEST_EVAL(expr_str)                                                    \
-  ASSERT_EQ((int)(expr_str), expr::eval(TO_STR(expr_str)).get<int>())
+#define TEST_EVAL_INT(expr_str) ASSERT_EQ((int)(expr_str), expr::eval(TO_STR(expr_str)).get<int>())
+#define TEST_EVAL_FLOAT(expr_str) ASSERT_EQ((float)(expr_str), expr::eval(TO_STR(expr_str)).get<float>())
+
 //-----------------------------------------------------------------------------
-TEST(eval, immediate) {
-  TEST_EVAL(123);
-  TEST_EVAL(0xFF);
-  TEST_EVAL(0xFFFF);
-  TEST_EVAL(0xFFFFFF);
-  TEST_EVAL(0xFFFFFFFF);
-  TEST_EVAL(0X12345678);
-  TEST_EVAL(0b10100101);
-  TEST_EVAL(0B01010101);
-  //	TEST_EVAL(0xdeadbeaf);
+TEST(eval, const_integer) {
+  TEST_EVAL_INT(123);
+  TEST_EVAL_INT(0xFF);
+  TEST_EVAL_INT(0xFFFF);
+  TEST_EVAL_INT(0xFFFFFF);
+  TEST_EVAL_INT(0xFFFFFFFF);
+  TEST_EVAL_INT(0X12345678);
+  TEST_EVAL_INT(0b10100101);
+  TEST_EVAL_INT(0B01010101);
+  //	TEST_EVAL_INT(0xdeadbeaf);
 }
 
 //-----------------------------------------------------------------------------
-TEST(eval, binary_expression) {
-  TEST_EVAL(3 + 2);
-  TEST_EVAL(3 - 2);
-  TEST_EVAL(3 * 2);
-  TEST_EVAL(3 / 2);
-  TEST_EVAL(3 % 2);
-  TEST_EVAL(3 << 2);
-  TEST_EVAL(3 >> 1);
-  TEST_EVAL(3 < 2);
-  TEST_EVAL(3 <= 2);
-  TEST_EVAL(3 > 2);
-  TEST_EVAL(3 >= 2);
-  TEST_EVAL(3 == 2);
-  TEST_EVAL(3 != 2);
-  TEST_EVAL(3 & 2);
-  TEST_EVAL(3 ^ 2);
-  TEST_EVAL(3 | 2);
-  TEST_EVAL(3 && 2);
-  TEST_EVAL(3 || 2);
+TEST(eval, binary_expression_integer) {
+  TEST_EVAL_INT(3 + 2);
+  TEST_EVAL_INT(3 - 2);
+  TEST_EVAL_INT(3 * 2);
+  TEST_EVAL_INT(3 / 2);
+  TEST_EVAL_INT(3 % 2);
+  TEST_EVAL_INT(3 << 2);
+  TEST_EVAL_INT(3 >> 1);
+  TEST_EVAL_INT(3 < 2);
+  TEST_EVAL_INT(3 <= 2);
+  TEST_EVAL_INT(3 > 2);
+  TEST_EVAL_INT(3 >= 2);
+  TEST_EVAL_INT(3 == 2);
+  TEST_EVAL_INT(3 != 2);
+  TEST_EVAL_INT(3 & 2);
+  TEST_EVAL_INT(3 ^ 2);
+  TEST_EVAL_INT(3 | 2);
+  TEST_EVAL_INT(3 && 2);
+  TEST_EVAL_INT(3 || 2);
 }
 
 //-----------------------------------------------------------------------------
-TEST(eval, unary_expression) {
-  TEST_EVAL(+3);
-  TEST_EVAL(-3);
-  TEST_EVAL(~3);
-  TEST_EVAL(!3);
+TEST(eval, unary_expression_integer) {
+  TEST_EVAL_INT(+3);
+  TEST_EVAL_INT(-3);
+  TEST_EVAL_INT(~3);
+  TEST_EVAL_INT(!3);
 }
 
 //-----------------------------------------------------------------------------
-TEST(eval, conditional_expression) {
-  TEST_EVAL(0 ? 2 : 3);
-  TEST_EVAL(1 ? 2 : 3);
-  TEST_EVAL(0 ? 0 ? 2 : 3 : 4);
-  TEST_EVAL(0 ? 0 ? 2 : 3 : 4);
-  TEST_EVAL(0 ? 1 ? 2 : 3 : 4);
-  TEST_EVAL(1 ? 0 ? 2 : 3 : 4);
-  TEST_EVAL(1 ? 1 ? 2 : 3 : 4);
-  TEST_EVAL(0 ? 2 : 0 ? 3 : 4);
-  TEST_EVAL(0 ? 2 : 1 ? 3 : 4);
-  TEST_EVAL(1 ? 2 : 0 ? 3 : 4);
-  TEST_EVAL(1 ? 2 : 1 ? 3 : 4);
+TEST(eval, conditional_expression_integer) {
+  TEST_EVAL_INT(0 ? 2 : 3);
+  TEST_EVAL_INT(1 ? 2 : 3);
+  TEST_EVAL_INT(0 ? 0 ? 2 : 3 : 4);
+  TEST_EVAL_INT(0 ? 0 ? 2 : 3 : 4);
+  TEST_EVAL_INT(0 ? 1 ? 2 : 3 : 4);
+  TEST_EVAL_INT(1 ? 0 ? 2 : 3 : 4);
+  TEST_EVAL_INT(1 ? 1 ? 2 : 3 : 4);
+  TEST_EVAL_INT(0 ? 2 : 0 ? 3 : 4);
+  TEST_EVAL_INT(0 ? 2 : 1 ? 3 : 4);
+  TEST_EVAL_INT(1 ? 2 : 0 ? 3 : 4);
+  TEST_EVAL_INT(1 ? 2 : 1 ? 3 : 4);
 }
 
 //-----------------------------------------------------------------------------
-TEST(eval, expression) {
-  TEST_EVAL(1 + 2 * 3);
-  TEST_EVAL(1 * 2 + 3);
-  TEST_EVAL(1 * (2 + 3));
-  TEST_EVAL((1 * 2) + 3);
-  TEST_EVAL(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
-  TEST_EVAL(1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
-  TEST_EVAL(1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9);
-  TEST_EVAL(1 + 2 - 3 + 4 - 5 + 6 - 7 + 8 - 9);
-  TEST_EVAL((1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9);
-  TEST_EVAL((1 + 2 * 3) + (4 * 5 + 6) * (7 + 8 * 9));
-  TEST_EVAL(((1 + 2) * 3) + (4 * (5 + 6)) * ((7 + 8) * 9));
-  TEST_EVAL((1 + 2 * 3) ? (4 * 5 + 6) : (7 + 8 * 9));
-  TEST_EVAL(1 + 2 ? 3 + 4 : 5 + 6);
-  TEST_EVAL(1 + 2 ? 3 + 4 ? 5 + 6 : 7 + 8 : 9);
-  TEST_EVAL(123 + 456 * 789 + 3 >= 8912 + 3 * 2 ? 3 + 554 * 0 - 1 : 650);
+TEST(eval, expression_integer) {
+  TEST_EVAL_INT(1 + 2 * 3);
+  TEST_EVAL_INT(1 * 2 + 3);
+  TEST_EVAL_INT(1 * (2 + 3));
+  TEST_EVAL_INT((1 * 2) + 3);
+  TEST_EVAL_INT(1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
+  TEST_EVAL_INT(1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+  TEST_EVAL_INT(1 + 2 * 3 + 4 * 5 + 6 * 7 + 8 * 9);
+  TEST_EVAL_INT(1 + 2 - 3 + 4 - 5 + 6 - 7 + 8 - 9);
+  TEST_EVAL_INT((1 + 2) * (3 + 4) * (5 + 6) * (7 + 8) * 9);
+  TEST_EVAL_INT((1 + 2 * 3) + (4 * 5 + 6) * (7 + 8 * 9));
+  TEST_EVAL_INT(((1 + 2) * 3) + (4 * (5 + 6)) * ((7 + 8) * 9));
+  TEST_EVAL_INT((1 + 2 * 3) ? (4 * 5 + 6) : (7 + 8 * 9));
+  TEST_EVAL_INT(1 + 2 ? 3 + 4 : 5 + 6);
+  TEST_EVAL_INT(1 + 2 ? 3 + 4 ? 5 + 6 : 7 + 8 : 9);
+  TEST_EVAL_INT(123 + 456 * 789 + 3 >= 8912 + 3 * 2 ? 3 + 554 * 0 - 1 : 650);
 }
 
 //-----------------------------------------------------------------------------
-#define TEST_INVALID_SYNTAX(expr_str)                                          \
-  ASSERT_ANY_THROW({ expr::eval(expr_str); })
+TEST(eval, const_float) {
+  TEST_EVAL_FLOAT(3.);
+  TEST_EVAL_FLOAT(3.14);
+  TEST_EVAL_FLOAT(.14);
+  TEST_EVAL_FLOAT(10e-3);
+}
+
+//-----------------------------------------------------------------------------
+TEST(eval, binary_expression_float) {
+  TEST_EVAL_FLOAT(3. + 2.);
+  TEST_EVAL_FLOAT(3. - 2.);
+  TEST_EVAL_FLOAT(3. * 2.);
+  TEST_EVAL_FLOAT(3. / 2.);
+  TEST_EVAL_INT(3.14 < 2.71);
+  TEST_EVAL_INT(3.14 <= 2.71);
+  TEST_EVAL_INT(3.14 > 2.71);
+  TEST_EVAL_INT(3.14 >= 2.71);
+  TEST_EVAL_INT(3.14 == 2.71);
+  TEST_EVAL_INT(3.14 != 2.71);
+}
+
+//-----------------------------------------------------------------------------
+TEST(eval, unary_expression_float) {
+  TEST_EVAL_FLOAT(+3.0);
+  TEST_EVAL_FLOAT(-3.1);
+}
+
+//-----------------------------------------------------------------------------
+TEST(eval, expression_integer_float) {
+  TEST_EVAL_FLOAT(1. + 2. * 3.);
+  TEST_EVAL_FLOAT(1. * 2. + 3.);
+  TEST_EVAL_FLOAT(1. * (2. + 3.));
+  TEST_EVAL_FLOAT((1. * 2.) + 3.);
+  TEST_EVAL_FLOAT(1. + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9);
+  TEST_EVAL_FLOAT(1 * 2. * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+  TEST_EVAL_FLOAT(1 + 2 * 3. + 4 * 5 + 6 * 7 + 8 * 9);
+  TEST_EVAL_FLOAT(1 + 2 - 3 + 4. - 5 + 6 - 7 + 8 - 9);
+}
+
+//-----------------------------------------------------------------------------
+#define TEST_INVALID_SYNTAX(expr_str) ASSERT_ANY_THROW({ expr::eval(expr_str); })
 TEST(eval, invalid_syntax) {
-  TEST_INVALID_SYNTAX("((1+2)"); // expected ')'
-  TEST_INVALID_SYNTAX("(1+2))"); // expected '('
-  TEST_INVALID_SYNTAX("3(1+2)"); // unknown token when expecting an operator '('
-  TEST_INVALID_SYNTAX("(1+2)3"); // unknown token when expecting an operator '3'
-  TEST_INVALID_SYNTAX("(1+2)+"); // unknown token when expecting an expression
+  TEST_INVALID_SYNTAX("((1+2)");  // expected ')'
+  TEST_INVALID_SYNTAX("(1+2))");  // expected '('
+  TEST_INVALID_SYNTAX("3(1+2)");  // unknown token when expecting an operator '('
+  TEST_INVALID_SYNTAX("(1+2)3");  // unknown token when expecting an operator '3'
+  TEST_INVALID_SYNTAX("(1+2)+");  // unknown token when expecting an expression
   TEST_INVALID_SYNTAX("(1+2)?3"); // expected ':'
   TEST_INVALID_SYNTAX("1=2");     //	cannot assign to except for variables
 }
@@ -183,8 +242,7 @@ expr::Value &getVar(const std::string &symbol) {
   return _a;
 }
 
-#define TEST_VAR(expr_str)                                                     \
-  ASSERT_EQ((int)(expr_str), expr::eval(TO_STR(expr_str), getVar).get<int>())
+#define TEST_VAR(expr_str) ASSERT_EQ((int)(expr_str), expr::eval(TO_STR(expr_str), getVar).get<int>())
 
 //-----------------------------------------------------------------------------
 TEST(eval, variable_expression) {
@@ -252,7 +310,7 @@ TEST(eval, expression2) {
 //   int Reg[16];
 
 //   auto myAST = expr::parser(R"(%r12>=100)");
-//   auto getReg = [&] (const std::string &symbol) -> int&{ 
+//   auto getReg = [&] (const std::string &symbol) -> int&{
 //     std::smatch m;
 //     int idx = -1;
 //     if (regex_search(symbol, m, std::regex(R"(\%[rR]([0-9]+))"))) {
@@ -261,7 +319,7 @@ TEST(eval, expression2) {
 //     assert(idx >= 0);
 
 //     return Reg[idx % (sizeof(Reg) * sizeof(Reg[0]))];
-//   };  
+//   };
 
 //   Reg[12] = 128;
 //   ASSERT_EQ((int)(Reg[12] >= 100), myAST->eval(getReg));
@@ -287,7 +345,7 @@ TEST(eval, expression2) {
 // TEST(eval, this_pointer) {
 
 //   Foo foo;
-//   auto getReg = [&] (const std::string &symbol) -> int&{ 
+//   auto getReg = [&] (const std::string &symbol) -> int&{
 //     return foo.getReg(symbol);
 //   };
 //   auto myAST = expr::parser(R"(%r12>=100)");
@@ -296,4 +354,3 @@ TEST(eval, expression2) {
 //   foo.reg[12] = 99;
 //   ASSERT_EQ((int)(foo.reg[12] >= 100), myAST->eval(getReg));
 // }
-

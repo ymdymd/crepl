@@ -34,9 +34,11 @@ std::list<Token> lexer(const std::string &line) {
   auto ite = line.cend();
 
   std::vector<Token> keywords = {
+      {IMMF,
+       R"(^((([0-9]+)([eE][+-]?[0-9]+)+)|(([0-9]+\.[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?)))"},
       {IMMX, R"(^0[xX][0-9a-fA-F]+)"},
       {IMMB, R"(^0[bB][0-1]+)"},
-      {IMM, R"(^[0-9]+)"},
+      {IMMI, R"(^[0-9]+)"},
       {VAR, R"(^[a-zA-Z][a-zA-Z0-9]*)"},
       {REG, R"(^\%[a-zA-Z][0-9]+)"},
       {ASSIGN_SL, R"(^\<\<\=)"},
@@ -87,6 +89,11 @@ std::list<Token> lexer(const std::string &line) {
     }
 
     Token token;
+    // std::for_each(itr, ite, [](char c) {
+    //   if (c != '\0')
+    //     std::cout << c;
+    // });
+    // std::cout << std::endl;
     for (const auto &keyword : keywords) {
       if (regex_search(itr, ite, m, std::regex(keyword.str))) {
         itr = m[0].second;
@@ -145,7 +152,7 @@ public:
 class ConstantExprAST : public ExprAST {
 public:
   const Value Val;
-  explicit ConstantExprAST(Value val) : ExprAST(IMM), Val(val) {}
+  explicit ConstantExprAST(Value val) : ExprAST(IMMI), Val(val) {}
   void accept(ExprVisitor *visitor) override { visitor->visit(*this); }
 };
 
@@ -589,17 +596,25 @@ static std::unique_ptr<ExprAST> expression(std::list<Token> *tokens) {
 static std::unique_ptr<ExprAST> constant_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
   Value value(0);
-  if (tokens->front().type == IMM) {
+  switch (tokens->front().type) {
+  case (IMMF):
+    value = std::stof(tokens->front().str, nullptr);
+    break;
+  case (IMMI):
     value = std::stoi(tokens->front().str, nullptr, 0);
-  } else if (tokens->front().type == IMMX) {
-    value = static_cast<int>(
+    break;
+  case (IMMX):
+    value = static_cast<int>( //
         std::stoul(tokens->front().str.substr(2), nullptr, 16));
-  } else if (tokens->front().type == IMMB) {
-    value =
-        static_cast<int>(std::stoul(tokens->front().str.substr(2), nullptr, 2));
-  } else {
+    break;
+  case (IMMB):
+    value = static_cast<int>( //
+        std::stoul(tokens->front().str.substr(2), nullptr, 2));
+    break;
+  default:
     assert(0 && "illigal token type");
-  }
+    break;
+  };
   auto Result = std::make_unique<ConstantExprAST>(value);
   tokens->pop_front(); // consume the number
   return std::move(Result);
@@ -630,7 +645,8 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> *tokens) {
   switch (tokens->front().type) {
   default:
     throw expr_error("unknown token when expecting an expression");
-  case IMM:
+  case IMMF:
+  case IMMI:
   case IMMX:
   case IMMB:
     return constant_expression(tokens);
@@ -852,13 +868,16 @@ Value ExprAST::eval(std::function<Value &(const std::string &)> fp) {
 // evalute expr_str
 std::unique_ptr<ExprAST> parser(const std::string &expr_str) {
   auto tokens = lexer(expr_str);
+  // for(auto token : tokens){
+  //   std::cout << token.str << std::endl;
+  // }
   return parser(&tokens);
 }
 
 //=============================================================================
 // evalute expr_str
 Value eval(const std::string &expr_str,
-         std::function<Value &(const std::string &)> fp) {
+           std::function<Value &(const std::string &)> fp) {
   return parser(expr_str)->eval(std::move(fp));
 }
 

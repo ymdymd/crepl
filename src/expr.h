@@ -51,9 +51,10 @@ namespace expr {
 enum Type {
   INVALID = -1, //!< invalid token
   EOL = 0,      //!< End Of Line must be 0.
-  IMM,          //!<	integer_expression
+  IMMI,         //!<	integer_expression
   IMMX,         //!<	integer_expression(0x)
   IMMB,         //!<	integer_expression(0b)
+  IMMF,         //!<	float point expression
   VAR,          //!<    variable_expression
   REG,          //!<	  register_variable_expression
   PARL,         //!< '('  parenthesis_expression
@@ -152,6 +153,6 @@ std::unique_ptr<ExprAST> parser(const std::string &expr_str);
 //-----------------------------------------------------------------------------
 //! evaluate expression string
 Value eval(const std::string &expr_str,
-         std::function<Value &(const std::string &)> fp = nullptr);
+           std::function<Value &(const std::string &)> fp = nullptr);
 
 } // namespace expr

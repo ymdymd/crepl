@@ -7,7 +7,7 @@ TARGET	?= $(notdir $(CURDIR))
 #COV ?= 0 
 
 # switch debug build
-#DEBUG ?= 1 
+DEBUG ?= 1 
 
 # force debgg flag at coverage mode
 ifdef COV
