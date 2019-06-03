@@ -115,7 +115,7 @@ std::list<Token> lexer(const std::string &line) {
 }
 
 // Forward declaration
-class IntegerExprAST;
+class ConstantExprAST;
 class VariableExprAST;
 class UnaryExprAST;
 class BinaryExprAST;
@@ -129,7 +129,7 @@ public:
   ExprVisitor() = default;
   virtual ~ExprVisitor() = default;
 
-  virtual void visit(const IntegerExprAST &) = 0;
+  virtual void visit(const ConstantExprAST &) = 0;
   virtual void visit(const VariableExprAST &) = 0;
   virtual void visit(const UnaryExprAST &) = 0;
   virtual void visit(const BinaryExprAST &) = 0;
@@ -140,12 +140,12 @@ public:
 //=============================================================================
 // AST (Abstract Syntax Tree)
 //-----------------------------------------------------------------------------
-//! \brief Expression class for integer literals like "1".
+//! \brief Expression class for integer / float literals like "1".
 //! \brief "1"のような整数数値リテラルのための式クラス。
-class IntegerExprAST : public ExprAST {
+class ConstantExprAST : public ExprAST {
 public:
   const Value Val;
-  explicit IntegerExprAST(Value val) : ExprAST(IMM), Val(val) {}
+  explicit ConstantExprAST(Value val) : ExprAST(IMM), Val(val) {}
   void accept(ExprVisitor *visitor) override { visitor->visit(*this); }
 };
 
@@ -582,11 +582,11 @@ static std::unique_ptr<ExprAST> expression(std::list<Token> *tokens) {
 }
 
 /*!----------------------------------------------------------------------------
-\brief create integer_expression(terminate) from tokens
+\brief create constant_expression(terminate) from tokens
 
-<integer_expression> ::= <number>
+<constant_expression> ::= <number>
 */
-static std::unique_ptr<ExprAST> integer_expression(std::list<Token> *tokens) {
+static std::unique_ptr<ExprAST> constant_expression(std::list<Token> *tokens) {
   FUNCTION_CALL_TRACE(tokens->front().str);
   Value value(0);
   if (tokens->front().type == IMM) {
@@ -600,7 +600,7 @@ static std::unique_ptr<ExprAST> integer_expression(std::list<Token> *tokens) {
   } else {
     assert(0 && "illigal token type");
   }
-  auto Result = std::make_unique<IntegerExprAST>(value);
+  auto Result = std::make_unique<ConstantExprAST>(value);
   tokens->pop_front(); // consume the number
   return std::move(Result);
 }
@@ -622,7 +622,7 @@ static std::unique_ptr<ExprAST> variable_expression(std::list<Token> *tokens) {
 \brief primary_expression from tokens
 
 <primary_expression>
-    ::= <integer_expression>　(terminate)
+    ::= <constant_expression>　(terminate)
     | ( <expression> )
 */
 static std::unique_ptr<ExprAST> primary_expression(std::list<Token> *tokens) {
@@ -633,7 +633,7 @@ static std::unique_ptr<ExprAST> primary_expression(std::list<Token> *tokens) {
   case IMM:
   case IMMX:
   case IMMB:
-    return integer_expression(tokens);
+    return constant_expression(tokens);
   case VAR:
   case REG:
     return variable_expression(tokens);
@@ -678,7 +678,7 @@ public:
       : fp(std::move(_fp)) {}
   ~EvalExprVisitor() override = default;
 
-  void visit(const IntegerExprAST &ast) override { val = ast.Val; }
+  void visit(const ConstantExprAST &ast) override { val = ast.Val; }
 
   void visit(const VariableExprAST &ast) override {
     val = fp ? fp(ast.Name) : Value(0);
